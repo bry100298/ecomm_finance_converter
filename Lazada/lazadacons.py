@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 import os
+import glob
 
 # Define parent directory
 parent_dir = 'Lazada'
@@ -69,6 +70,59 @@ outbound_dir = os.path.join(parent_dir, 'Outbound')
 # Define the partial outbound directory
 partial_outbound_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Partial')
 
+
+
+def merge_files(parent_dir):
+    # Define directories
+    partial_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Partial')
+    xls_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport')
+    merged_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Merged')
+    
+    # Create merged directory if it doesn't exist
+    if not os.path.exists(merged_dir):
+        os.makedirs(merged_dir)
+    
+    # Get list of .xlsx files in the partial directory
+    partial_files = glob.glob(os.path.join(partial_dir, '*.xlsx'))
+    
+    # Get list of .xls files in the xls directory
+    xls_files = glob.glob(os.path.join(xls_dir, '*.xls'))
+    
+    # Print out the list of .xls files found
+    print("List of .xls files found:")
+    print(xls_files)
+    
+    # Iterate through each .xlsx file in the partial directory
+    for partial_file in partial_files:
+        # Load partial .xlsx file
+        partial_df = pd.read_excel(partial_file)
+        
+        # Reset index of partial DataFrame
+        partial_df.reset_index(drop=True, inplace=True)
+        
+        # Iterate through each .xls file in the xls directory
+        for xls_file in xls_files:
+            # Load .xls file
+            xls_df = pd.read_excel(xls_file)
+            
+            # Check and convert data types if necessary for merging
+            if partial_df['ORDER ID'].dtype != xls_df['Order Number.'].dtype:
+                if partial_df['ORDER ID'].dtype == 'object':
+                    xls_df['Order Number.'] = xls_df['Order Number.'].astype(str)
+                else:
+                    partial_df['ORDER ID'] = partial_df['ORDER ID'].astype(str)
+            
+            # Merge based on common column "ORDER ID" and "Order Number."
+            merged_df = pd.merge(partial_df, xls_df, how='inner', left_on='ORDER ID', right_on='Order Number.')
+            
+            # Save merged DataFrame to .xlsx file in merged directory
+            merged_filename = os.path.basename(partial_file).replace("LazadaPartialCons_", "LazadaPartialConsMerged_")
+            merged_path = os.path.join(merged_dir, merged_filename)
+            merged_df.to_excel(merged_path, index=False)
+            print(f"Merged data from {os.path.basename(partial_file)} with {os.path.basename(xls_file)} and saved to {merged_path}")
+
+
+
 # Process each raw data file
 for root, dirs, files in os.walk(raw_data_dir):
     for file in files:
@@ -85,3 +139,7 @@ for root, dirs, files in os.walk(raw_data_dir):
             partial_outbound_path = os.path.join(partial_outbound_dir, filename)
             partial_consolidation_df.to_excel(partial_outbound_path, index=False)
             print(f"Processed {file} and saved partial consolidated data to {partial_outbound_path}")
+
+
+# Call the merge_files function
+merge_files(parent_dir)
