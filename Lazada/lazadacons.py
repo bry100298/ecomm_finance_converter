@@ -45,7 +45,11 @@ def generate_consolidation_dataframe(consolidation_fields, raw_data):
     for column, raw_column in consolidation_fields.items():
         if raw_column is not None and raw_column in raw_data.columns:
             if column == 'Material No.' or column == 'Qty':
-                consolidation_df[column] = raw_data['sellerSku'].apply(lambda x: x.split('x')[0] if column == 'Material No.' else (x.split('x')[1] if 'x' in x else 1))
+                # consolidation_df[column] = raw_data['sellerSku'].apply(lambda x: x.split('x')[0] if column == 'Material No.' else (x.split('x')[1] if 'x' in x else 1))
+                # Split sellerSku into material code and quantity
+                consolidation_df[['Material No.', 'Qty']] = raw_data['sellerSku'].str.split('x', n=1, expand=True)
+                # Convert quantity to numeric type
+                consolidation_df['Qty'] = pd.to_numeric(consolidation_df['Qty'], errors='coerce').fillna(1)
             else:
                 consolidation_df[column] = raw_data[raw_column]
         else:
