@@ -123,6 +123,74 @@ def merge_files(parent_dir):
 
 
 
+# Define the new merged order report consolidation fields mapping
+merged_order_report_consolidation_fields = {
+    'Trucking #': 'trackingCode',
+    'ORDER ID': 'orderItemId',
+    'Material No.': 'sellerSku',
+    'Qty': 'sellerSku',
+    'Order Creation Date': 'createTime',
+    'SC Unit Price': 'unitPrice',
+    'Material Description': 'itemName',
+    'GROSS SALES': None,
+    'SC SALES': None,
+    'COGS PRICE': None,
+    'Voucher discounts': 'sellerDiscountTotal',
+    'Promo Discounts': None,
+    'Other Income': None,
+    'ORDER ID': 'LazadaId',
+    'DELIVERY STATUS': 'status',
+    'DISPATCH DATE': 'Out of Warehouse',
+    'wareHouse': 'wareHouse',
+    'Cancelled Reason': 'Cancel Reason',
+    'UDS': None,
+    'PAID/UNPAID': None,
+    'Remarks': 'sellerNote',
+    'ORDER ID': 'orderItemId',
+    'SALES': None,
+    'PAYMENT': None,
+    'Variance': None,
+    'PAID/UNPAID': None,
+    '%': None,
+    'Remarks': 'sellerNote'
+}
+
+# Define the reduce outbound directory
+reduce_outbound_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Merged', 'Reduce')
+
+# Create reduce outbound directory if it doesn't exist
+if not os.path.exists(reduce_outbound_dir):
+    os.makedirs(reduce_outbound_dir)
+
+# Function to reduce the merged data
+# Function to reduce the merged data
+def reduce_merged_data(merged_dir):
+    # Get list of .xlsx files in the merged directory
+    merged_files = glob.glob(os.path.join(merged_dir, '*.xlsx'))
+    
+    # Iterate through each .xlsx file in the merged directory
+    for merged_file in merged_files:
+        # Read the merged data
+        merged_data = pd.read_excel(merged_file)
+        
+        # Rename columns if necessary
+        merged_data.rename(columns={
+            'Out of Warehouse': 'DISPATCH DATE',
+            'Cancel Reason': 'Cancelled Reason'
+        }, inplace=True)
+        
+        # Select only the columns specified in merged_order_report_consolidation_fields
+        merged_data_reduced = merged_data[list(merged_order_report_consolidation_fields.keys())]
+        
+        # Generate filename for reduced data
+        reduce_filename = os.path.basename(merged_file).replace("LazadaPartialConsMerged_", "LazadaReduce_")
+        reduce_path = os.path.join(reduce_outbound_dir, reduce_filename)
+        
+        # Save reduced data to .xlsx file in reduce outbound directory
+        merged_data_reduced.to_excel(reduce_path, index=False)
+        print(f"Reduced data from {os.path.basename(merged_file)} and saved to {reduce_path}")
+
+
 # Process each raw data file
 for root, dirs, files in os.walk(raw_data_dir):
     for file in files:
@@ -143,3 +211,9 @@ for root, dirs, files in os.walk(raw_data_dir):
 
 # Call the merge_files function
 merge_files(parent_dir)
+
+# Define the merged directory
+merged_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Merged')
+
+# Call the reduce_merged_data function
+reduce_merged_data(merged_dir)
