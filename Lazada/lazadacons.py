@@ -10,7 +10,7 @@ consolidation_fields = {
     'Trucking #': 'trackingCode',
     'ORDER ID': 'orderItemId',
     'Material No.': 'sellerSku',
-    'Qty': None,
+    'Qty': 'sellerSku',
     'Order Creation Date': 'createTime',
     'SC Unit Price': 'unitPrice',
     'Material Description': 'itemName',
@@ -20,6 +20,7 @@ consolidation_fields = {
     'Voucher discounts': 'sellerDiscountTotal',
     'Promo Discounts': None,
     'Other Income': None,
+    'ORDER ID': 'LazadaId',
     'DELIVERY STATUS': 'status',
     'DISPATCH DATE': None,
     'wareHouse': 'wareHouse',
@@ -27,11 +28,13 @@ consolidation_fields = {
     'UDS': None,
     'PAID/UNPAID': None,
     'Remarks': 'sellerNote',
+    'ORDER ID': 'orderItemId',
     'SALES': None,
     'PAYMENT': None,
     'Variance': None,
     'PAID/UNPAID': None,
-    '%': None
+    '%': None,
+    'Remarks': 'sellerNote'
 }
 
 def generate_consolidation_dataframe(consolidation_fields, raw_data):
@@ -41,7 +44,10 @@ def generate_consolidation_dataframe(consolidation_fields, raw_data):
     # Iterate over consolidation fields and populate DataFrame with raw data
     for column, raw_column in consolidation_fields.items():
         if raw_column is not None and raw_column in raw_data.columns:
-            consolidation_df[column] = raw_data[raw_column]
+            if column == 'Material No.' or column == 'Qty':
+                consolidation_df[column] = raw_data['sellerSku'].apply(lambda x: x.split('x')[0] if column == 'Material No.' else (x.split('x')[1] if 'x' in x else 1))
+            else:
+                consolidation_df[column] = raw_data[raw_column]
         else:
             consolidation_df[column] = None
     
