@@ -191,6 +191,43 @@ def reduce_merged_data(merged_dir):
         print(f"Reduced data from {os.path.basename(merged_file)} and saved to {reduce_path}")
 
 
+# Define the reduce outbound directory
+reduce_outbound_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Merged', 'Reduce')
+
+# Define the directory to search for .xlsx files
+reduce_inbound_dir = os.path.join(reduce_outbound_dir)
+
+# Create remove directory if it doesn't exist
+remove_dir = os.path.join(reduce_outbound_dir, "Remove")
+if not os.path.exists(remove_dir):
+    os.makedirs(remove_dir)
+
+# Function to remove the first column containing 'DISPATCH DATE' or 'Cancelled Reason' and save it in the specified directory
+def remove_first_duplicate_column(inbound_dir):
+    # Get list of .xlsx files in the inbound directory
+    inbound_files = glob.glob(os.path.join(inbound_dir, '*.xlsx'))
+    
+    # Iterate through each .xlsx file in the inbound directory
+    for inbound_file in inbound_files:
+        # Read the data from the inbound file
+        inbound_data = pd.read_excel(inbound_file)
+        
+        # Check if DISPATCH DATE and Cancelled Reason exist and delete the first column that has them
+        if 'DISPATCH DATE' in inbound_data.columns:
+            inbound_data = inbound_data.drop(columns=inbound_data.columns[inbound_data.columns.get_loc('DISPATCH DATE')])
+            removed = True
+        if 'Cancelled Reason' in inbound_data.columns:
+            inbound_data = inbound_data.drop(columns=inbound_data.columns[inbound_data.columns.get_loc('Cancelled Reason')])
+            removed = True
+
+        # Generate filename for removed data
+        remove_filename = os.path.basename(inbound_file).replace("LazadaPartialConsMerged_", "LazadaRemove_")
+        remove_path = os.path.join(remove_dir, remove_filename)
+        
+        # Save removed data to .xlsx file in remove directory if a duplicate column was found and removed
+        if removed:
+            inbound_data.to_excel(remove_path, index=False)
+            print(f"Removed duplicate columns from {os.path.basename(inbound_file)} and saved to {remove_path}")
 # Process each raw data file
 for root, dirs, files in os.walk(raw_data_dir):
     for file in files:
@@ -217,3 +254,6 @@ merged_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Merged')
 
 # Call the reduce_merged_data function
 reduce_merged_data(merged_dir)
+
+# Call the remove_first_duplicate_column function
+remove_first_duplicate_column(reduce_inbound_dir)
