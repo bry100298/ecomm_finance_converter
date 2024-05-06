@@ -6,6 +6,7 @@ import glob
 # Define parent directory
 parent_dir = 'Lazada'
 
+#Phase 1 Partial consolidation
 # Define the partial consolidation fields mapping
 partial_consolidation_fields = {
     'Trucking #': 'trackingCode',
@@ -71,7 +72,7 @@ outbound_dir = os.path.join(parent_dir, 'Outbound')
 partial_outbound_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Partial')
 
 
-
+#Phase 2 merging ordersreport
 def merge_files(parent_dir):
     # Define directories
     partial_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Partial')
@@ -228,6 +229,47 @@ def remove_first_duplicate_column(inbound_dir):
         if removed:
             inbound_data.to_excel(remove_path, index=False)
             print(f"Removed duplicate columns from {os.path.basename(inbound_file)} and saved to {remove_path}")
+
+
+#Phase 3 SKU
+# Function to merge data from two directories based on matching columns
+def merge_data_with_matching_columns(directory1, directory2, matching_column1, matching_column2, combined_dir):
+    # Get list of .xlsx files in the first directory
+    files_dir1 = glob.glob(os.path.join(directory1, '*.xlsx'))
+
+    # Get list of .xlsx files in the second directory
+    files_dir2 = glob.glob(os.path.join(directory2, '*.xlsx'))
+
+    # Create combined directory if it doesn't exist
+    if not os.path.exists(combined_dir):
+        os.makedirs(combined_dir)
+
+    # Iterate through each file in the first directory
+    for file1 in files_dir1:
+        # Read data from the first file
+        data1 = pd.read_excel(file1)
+
+        # Check if the matching column exists in the data from the first file
+        if matching_column1 in data1.columns:
+            # Iterate through each file in the second directory
+            for file2 in files_dir2:
+                # Read data from the second file
+                data2 = pd.read_excel(file2)
+
+                # Check if the matching column exists in the data from the second file
+                if matching_column2 in data2.columns:
+                    # Merge data based on matching columns
+                    merged_data = pd.merge(data1, data2, how='inner', left_on=matching_column1, right_on=matching_column2)
+
+                    # Generate filename for merged data
+                    merged_filename = os.path.basename(file1).replace(".xlsx", "_merged.xlsx")
+                    merged_path = os.path.join(combined_dir, merged_filename)
+
+                    # Save merged data to the combined directory
+                    merged_data.to_excel(merged_path, index=False)
+                    print(f"Merged data from {os.path.basename(file1)} and {os.path.basename(file2)} and saved to {merged_path}")
+                    break  # Stop iterating through files in directory2 once a match is found
+
 # Process each raw data file
 for root, dirs, files in os.walk(raw_data_dir):
     for file in files:
@@ -257,3 +299,20 @@ reduce_merged_data(merged_dir)
 
 # Call the remove_first_duplicate_column function
 remove_first_duplicate_column(reduce_inbound_dir)
+
+
+
+
+# Define directories for merging
+dir1 = os.path.join(parent_dir, 'Archive', 'ConsolOrderReport', 'Merged', 'Reduce', 'Remove')
+dir2 = os.path.join(parent_dir, 'Inbound', 'SKU')
+
+# Define matching columns
+matching_column1 = 'Material No.'
+matching_column2 = 'BRI MATCODE'
+
+# Define combined directory
+combined_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport', 'Combined')
+
+# Call the function to merge data
+merge_data_with_matching_columns(dir1, dir2, matching_column1, matching_column2, combined_dir)
