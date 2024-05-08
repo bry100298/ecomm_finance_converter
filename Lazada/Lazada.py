@@ -109,7 +109,7 @@ def generate_consolidation(input_dir, output_dir):
             'buyerFailedDeliveryReason': 'Cancelled Reason',
             'sellerNote': 'Remarks',
             'orderItemId': 'ORDER ID'
-        })[['Trucking #', 'ORDER ID', 'Material No.', 'Qty', 'Order Creation Date', 'SC Unit Price', 'Material Description', 'GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts', 'Promo Discounts', 'Other Income', 'ORDER ID', 'DELIVERY STATUS', 'DISPATCH DATE', 'wareHouse', 'Cancelled Reason', 'UDS', 'PAID/UNPAID', 'Remarks', 'ORDER ID', 'SALES', 'PAYMENT', 'Variance', 'PAID/UNPAID', '%']]
+        })[['Trucking #', 'ORDER ID', 'Material No.', 'Qty', 'Order Creation Date', 'SC Unit Price', 'Material Description', 'GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts', 'Promo Discounts', 'Other Income', 'ORDER ID', 'DELIVERY STATUS', 'DISPATCH DATE', 'wareHouse', 'Cancelled Reason', 'UDS', 'PAID/UNPAID', 'Remarks', 'ORDER ID', 'SALES', 'PAYMENT', 'Variance', 'PAID/UNPAID', '%', 'Remarks']]
         
         # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_consolidated.xlsx")
