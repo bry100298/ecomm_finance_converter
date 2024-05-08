@@ -78,8 +78,11 @@ def generate_consolidation(input_dir, output_dir):
         # Read the Excel file
         merged_data = pd.read_excel(input_file)
         
+        # Calculate GROSS SALES based on BRI SELLING PRICE (SRP) and Qty
+        merged_data['GROSS SALES'] = merged_data['BRI SELLING PRICE (SRP)'] * merged_data['Qty']
+        
         # Add a column for GROSS SALES filled with None
-        merged_data['GROSS SALES'] = None
+        # merged_data['GROSS SALES'] = None
         merged_data['SC SALES'] = None
         merged_data['COGS PRICE'] = None
         # merged_data['Voucher discounts'] = None
@@ -122,4 +125,4 @@ def generate_consolidation(input_dir, output_dir):
 consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
 
 # Call the function
-generate_consolidation(merged_dir, consolidation_dir)
+# generate_consolidation(merged_dir, consolidation_dir)
