@@ -69,3 +69,57 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
 
 # Merge data from different directories
 merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir)
+
+def generate_consolidation(input_dir, output_dir):
+    # Find any xlsx files in the input directory
+    input_files = glob.glob(os.path.join(input_dir, '*.xlsx'))
+    
+    for input_file in input_files:
+        # Read the Excel file
+        merged_data = pd.read_excel(input_file)
+        
+        # Add a column for GROSS SALES filled with None
+        merged_data['GROSS SALES'] = None
+        merged_data['SC SALES'] = None
+        merged_data['COGS PRICE'] = None
+        # merged_data['Voucher discounts'] = None
+        merged_data['Promo Discounts'] = None
+        merged_data['Other Income'] = None
+        merged_data['UDS'] = None
+        merged_data['PAID/UNPAID'] = None
+        merged_data['SALES'] = None
+        merged_data['PAYMENT'] = None
+        merged_data['Variance'] = None
+        merged_data['%'] = None
+
+        # Rename columns and reorder
+        merged_data = merged_data.rename(columns={
+            'trackingCode': 'Trucking #',
+            'orderItemId': 'ORDER ID',
+            'sellerSku': 'Material No.',
+            'Qty': 'Qty',
+            'createTime': 'Order Creation Date',
+            'unitPrice': 'SC Unit Price',
+            'itemName': 'Material Description',
+            'sellerDiscountTotal': 'Voucher discounts',
+            'orderItemId': 'ORDER ID',
+            'status': 'DELIVERY STATUS',
+            'Out of Warehouse': 'DISPATCH DATE',
+            'wareHouse': 'wareHouse',
+            'buyerFailedDeliveryReason': 'Cancelled Reason',
+            'sellerNote': 'Remarks',
+            'orderItemId': 'ORDER ID'
+        })[['Trucking #', 'ORDER ID', 'Material No.', 'Qty', 'Order Creation Date', 'SC Unit Price', 'Material Description', 'GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts', 'Promo Discounts', 'Other Income', 'ORDER ID', 'DELIVERY STATUS', 'DISPATCH DATE', 'wareHouse', 'Cancelled Reason', 'UDS', 'PAID/UNPAID', 'Remarks', 'ORDER ID', 'SALES', 'PAYMENT', 'Variance', 'PAID/UNPAID', '%']]
+        
+        # Generate filename
+        filename = os.path.basename(input_file).replace(".xlsx", "_consolidated.xlsx")
+        
+        # Save the modified data to the output directory
+        output_path = os.path.join(output_dir, filename)
+        merged_data.to_excel(output_path, index=False)
+        print(f"Consolidation generated and saved to: {output_path}")
+
+consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
+
+# Call the function
+generate_consolidation(merged_dir, consolidation_dir)
