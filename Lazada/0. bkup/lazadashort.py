@@ -2,13 +2,22 @@ import pandas as pd
 import os
 import glob
 
+# Define directories
+# raw_data_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\RawData'
+# sku_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\SKU'
+# consol_order_report_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\ConsolOrderReport'
+# merged_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\Merged'
+
+
 # Define parent directory
 parent_dir = 'Lazada'
+
 # Define directories
-raw_data_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\RawData'
-sku_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\SKU'
-consol_order_report_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\ConsolOrderReport'
-merged_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\Merged'
+raw_data_dir = os.path.join(parent_dir, 'Inbound', 'RawData')
+sku_dir = os.path.join(parent_dir, 'SKU')
+consol_order_report_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport')
+merged_dir = os.path.join(parent_dir, 'Inbound', 'Merged')
+
 
 # Function to extract quantity from sellerSku
 def extract_quantity(seller_sku):
@@ -67,27 +76,27 @@ def generate_consolidation(input_dir, output_dir):
     
     for input_file in input_files:
         # Read the Excel file
-        merge_data = pd.read_excel(input_file)
+        merged_data = pd.read_excel(input_file)
         
         # Calculate GROSS SALES based on BRI SELLING PRICE (SRP) and Qty
-        merge_data['GROSS SALES'] = merge_data['BRI SELLING PRICE (SRP)'] * merge_data['Qty']
+        merged_data['GROSS SALES'] = merged_data['BRI SELLING PRICE (SRP)'] * merged_data['Qty']
         
         # Add a column for GROSS SALES filled with None
-        # merge_data['GROSS SALES'] = None
-        merge_data['SC SALES'] = None
-        merge_data['COGS PRICE'] = None
-        # merge_data['Voucher discounts'] = None
-        merge_data['Promo Discounts'] = None
-        merge_data['Other Income'] = None
-        merge_data['UDS'] = None
-        merge_data['PAID/UNPAID'] = None
-        merge_data['SALES'] = None
-        merge_data['PAYMENT'] = None
-        merge_data['Variance'] = None
-        merge_data['%'] = None
+        # merged_data['GROSS SALES'] = None
+        merged_data['SC SALES'] = None
+        merged_data['COGS PRICE'] = None
+        # merged_data['Voucher discounts'] = None
+        merged_data['Promo Discounts'] = None
+        merged_data['Other Income'] = None
+        merged_data['UDS'] = None
+        merged_data['PAID/UNPAID'] = None
+        merged_data['SALES'] = None
+        merged_data['PAYMENT'] = None
+        merged_data['Variance'] = None
+        merged_data['%'] = None
 
         # Rename columns and reorder
-        merge_data = merge_data.rename(columns={
+        merged_data = merged_data.rename(columns={
             'trackingCode': 'Trucking #',
             'orderItemId': 'ORDER ID',
             'sellerSku': 'Material No.',
@@ -110,10 +119,10 @@ def generate_consolidation(input_dir, output_dir):
         
         # Save the modified data to the output directory
         output_path = os.path.join(output_dir, filename)
-        merge_data.to_excel(output_path, index=False)
+        merged_data.to_excel(output_path, index=False)
         print(f"Consolidation generated and saved to: {output_path}")
 
 consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
 
 # Call the function
-generate_consolidation(merged_dir, consolidation_dir)
+# generate_consolidation(merged_dir, consolidation_dir)
