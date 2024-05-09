@@ -84,6 +84,13 @@ def generate_consolidation(input_dir, output_dir):
             else:
                 merge_data.at[index, 'Promo Discounts'] = 0
 
+        # Calculate Other Income based on conditions
+        for index, row in merge_data.iterrows():
+            if row['GROSS SALES'] <= row['SC SALES']:
+                merge_data.at[index, 'Other Income'] = row['SC SALES'] - row['GROSS SALES']
+            else:
+                merge_data.at[index, 'Other Income'] = 0
+
         # Add a column for GROSS SALES filled with None
         # merge_data['GROSS SALES'] = None
         # merge_data['SC SALES'] = None
@@ -96,14 +103,14 @@ def generate_consolidation(input_dir, output_dir):
         # merge_data['SC SALES'] = None
         # merge_data['COGS PRICE'] = None
         # merge_data['Voucher discounts'] = None
-        merge_data['Promo Discounts'] = None
-        merge_data['Other Income'] = None
-        merge_data['UDS'] = None
-        merge_data['PAID/UNPAID'] = None
-        merge_data['SALES'] = None
-        merge_data['PAYMENT'] = None
-        merge_data['Variance'] = None
-        merge_data['%'] = None
+        # merge_data['Promo Discounts'] = None
+        # merge_data['Other Income'] = None
+        # merge_data['UDS'] = None
+        # merge_data['PAID/UNPAID'] = None
+        # merge_data['SALES'] = None
+        # merge_data['PAYMENT'] = None
+        # merge_data['Variance'] = None
+        # merge_data['%'] = None
 
         # Rename columns and reorder
         merge_data = merge_data.rename(columns={
@@ -120,9 +127,7 @@ def generate_consolidation(input_dir, output_dir):
             'Out of Warehouse': 'DISPATCH DATE',
             'wareHouse': 'wareHouse',
             'buyerFailedDeliveryReason': 'Cancelled Reason',
-            'sellerNote': 'Remarks',
-            'orderItemId': 'ORDER ID'
-        })[['Trucking #', 'ORDER ID', 'Material No.', 'Qty', 'Order Creation Date', 'SC Unit Price', 'Material Description', 'GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts', 'Promo Discounts', 'Other Income', 'ORDER ID', 'DELIVERY STATUS', 'DISPATCH DATE', 'wareHouse', 'Cancelled Reason', 'UDS', 'PAID/UNPAID', 'Remarks', 'ORDER ID', 'SALES', 'PAYMENT', 'Variance', 'PAID/UNPAID', '%', 'Remarks']]
+        })[['Trucking #', 'ORDER ID', 'Material No.', 'Qty', 'Order Creation Date', 'SC Unit Price', 'Material Description', 'GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts', 'Promo Discounts', 'Other Income', 'ORDER ID', 'DELIVERY STATUS', 'DISPATCH DATE', 'wareHouse', 'Cancelled Reason']]
         
 
         # Fill NaN values with 0 in specific columns
