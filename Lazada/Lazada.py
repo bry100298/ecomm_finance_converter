@@ -2,7 +2,7 @@ import pandas as pd
 import os
 import glob
 
-store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
+# store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
 
 # Define parent directory
 parent_dir = 'Lazada'
@@ -154,13 +154,30 @@ generate_consolidation(merged_dir, consolidation_dir)
 
 def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
     input_files = glob.glob(os.path.join(consolidation_dir, '*.xlsx'))
+    store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
     
     for input_file in input_files:
         data = pd.read_excel(input_file)
         
         data = data.rename(columns={'ORDER ID': '*InvoiceNo',
                                      'DISPATCH DATE': '*InvoiceDate',
-                                     'Material No.': 'Item(Product/Service)'})[['*InvoiceNo', '*InvoiceDate', 'Item(Product/Service)']]
+                                     'Material No.': 'Item(Product/Service)'})
+        
+        # Add the '*Customer' column with the specified store name
+        data['*Customer'] = store_name
+        
+        # Convert '*InvoiceDate' to datetime if it's not already
+        if not pd.api.types.is_datetime64_any_dtype(data['*InvoiceDate']):
+            data['*InvoiceDate'] = pd.to_datetime(data['*InvoiceDate'], errors='coerce')
+        
+        # Format the '*InvoiceDate' column to MM/DD/YYYY format
+        data['*InvoiceDate'] = data['*InvoiceDate'].dt.strftime('%m/%d/%Y')
+        
+        # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
+        data['*InvoiceNo'] = data['*InvoiceNo'] + data['*InvoiceDate'].str.replace('/', '')
+        
+        # Reorder columns
+        data = data[['*InvoiceNo', '*Customer', '*InvoiceDate', 'Item(Product/Service)']]
         
         filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
         output_path = os.path.join(quickbooks_dir, filename)
