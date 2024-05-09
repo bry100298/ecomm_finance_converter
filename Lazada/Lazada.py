@@ -4,11 +4,12 @@ import glob
 
 # Define parent directory
 parent_dir = 'Lazada'
+
 # Define directories
-raw_data_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\RawData'
-sku_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\SKU'
-consol_order_report_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\ConsolOrderReport'
-merged_dir = r'C:\Users\User\Documents\Project\ecomm_finance_converter\Lazada\Inbound\Merged'
+raw_data_dir = os.path.join(parent_dir, 'Inbound', 'RawData')
+sku_dir = os.path.join(parent_dir, 'Inbound', 'SKU')
+consol_order_report_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport')
+merged_dir = os.path.join(parent_dir, 'Inbound', 'Merged')
 
 # Function to extract quantity from sellerSku
 def extract_quantity(seller_sku):
