@@ -73,6 +73,20 @@ def generate_consolidation(input_dir, output_dir):
         merge_data['GROSS SALES'] = merge_data['BRI SELLING PRICE (SRP)'] * merge_data['Qty']
         merge_data['SC SALES'] = merge_data['unitPrice'] * merge_data['Qty']
         merge_data['COGS PRICE'] = merge_data['COGS'] * merge_data['Qty']
+
+        # Calculate Promo Discounts based on conditions
+        for index, row in merge_data.iterrows():
+            if row['GROSS SALES'] >= row['SC SALES']:
+                merge_data.at[index, 'Promo Discounts'] = row['GROSS SALES'] - row['SC SALES']
+            else:
+                merge_data.at[index, 'Promo Discounts'] = 0
+
+        # Add a column for GROSS SALES filled with None
+        # merge_data['GROSS SALES'] = None
+        # merge_data['SC SALES'] = None
+        # merge_data['COGS PRICE'] = None
+        # merge_data['Voucher discounts'] = None
+        # merge_data['Promo Discounts'] = None
         
         # Add a column for GROSS SALES filled with None
         # merge_data['GROSS SALES'] = None
@@ -107,6 +121,13 @@ def generate_consolidation(input_dir, output_dir):
             'orderItemId': 'ORDER ID'
         })[['Trucking #', 'ORDER ID', 'Material No.', 'Qty', 'Order Creation Date', 'SC Unit Price', 'Material Description', 'GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts', 'Promo Discounts', 'Other Income', 'ORDER ID', 'DELIVERY STATUS', 'DISPATCH DATE', 'wareHouse', 'Cancelled Reason', 'UDS', 'PAID/UNPAID', 'Remarks', 'ORDER ID', 'SALES', 'PAYMENT', 'Variance', 'PAID/UNPAID', '%', 'Remarks']]
         
+
+        # Fill NaN values with 0 in specific columns
+        columns_to_fill = ['GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts']
+        merge_data[columns_to_fill] = merge_data[columns_to_fill].fillna(0)
+
+        # Generate filename
+        filename = os.path.basename(input_file).replace(".xlsx", "_consolidated.xlsx")
         # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_consolidated.xlsx")
         
