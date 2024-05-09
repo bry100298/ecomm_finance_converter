@@ -37,7 +37,10 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         merged_data['Qty'] = merged_data['sellerSku'].apply(extract_quantity)
         
         # Remove letter "x" from "sellerSku"
-        merged_data['sellerSku'] = merged_data['sellerSku'].str.replace('x', '')
+        # merged_data['sellerSku'] = merged_data['sellerSku'].str.replace('x', '')
+        # Remove 'x' and any digits after 'x' in sellerSku
+        merged_data['sellerSku'] = merged_data['sellerSku'].apply(lambda x: x.split('x')[0] if 'x' in x else x)
+
 
         # Drop rows with duplicate "orderItemId"
         merged_data = merged_data.drop_duplicates(subset='orderItemId', keep='first')
