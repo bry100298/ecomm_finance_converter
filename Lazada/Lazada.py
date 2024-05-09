@@ -2,6 +2,8 @@ import pandas as pd
 import os
 import glob
 
+store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
+
 # Define parent directory
 parent_dir = 'Lazada'
 
