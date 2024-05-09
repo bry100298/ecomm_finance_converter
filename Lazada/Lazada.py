@@ -140,7 +140,7 @@ def generate_consolidation(input_dir, output_dir):
         # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_consolidated.xlsx")
         # Generate filename
-        filename = os.path.basename(input_file).replace(".xlsx", "_consolidated.xlsx")
+        # filename = os.path.basename(input_file).replace(".xlsx", "_consolidated.xlsx")
         
         # Save the modified data to the output directory
         output_path = os.path.join(output_dir, filename)
