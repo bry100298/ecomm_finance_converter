@@ -151,3 +151,25 @@ consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
 
 # Call the function
 generate_consolidation(merged_dir, consolidation_dir)
+
+def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
+    input_files = glob.glob(os.path.join(consolidation_dir, '*.xlsx'))
+    
+    for input_file in input_files:
+        data = pd.read_excel(input_file)
+        
+        data = data.rename(columns={'ORDER ID': '*InvoiceNo',
+                                     'DISPATCH DATE': '*InvoiceDate',
+                                     'Material No.': 'Item(Product/Service)'})[['*InvoiceNo', '*InvoiceDate', 'Item(Product/Service)']]
+        
+        filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
+        output_path = os.path.join(quickbooks_dir, filename)
+        data.to_excel(output_path, index=False)
+        print(f"QuickBooks upload file generated and saved to: {output_path}")
+
+# Define directories
+consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
+quickbooks_dir = os.path.join(parent_dir, 'Outbound', 'QuickBooks')
+
+# Call the function
+generate_quickbook_upload(consolidation_dir, quickbooks_dir)
