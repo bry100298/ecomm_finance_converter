@@ -71,11 +71,13 @@ def generate_consolidation(input_dir, output_dir):
         
         # Calculate GROSS SALES based on BRI SELLING PRICE (SRP) and Qty
         merge_data['GROSS SALES'] = merge_data['BRI SELLING PRICE (SRP)'] * merge_data['Qty']
+        merge_data['SC SALES'] = merge_data['unitPrice'] * merge_data['Qty']
+        merge_data['COGS PRICE'] = merge_data['COGS'] * merge_data['Qty']
         
         # Add a column for GROSS SALES filled with None
         # merge_data['GROSS SALES'] = None
-        merge_data['SC SALES'] = None
-        merge_data['COGS PRICE'] = None
+        # merge_data['SC SALES'] = None
+        # merge_data['COGS PRICE'] = None
         # merge_data['Voucher discounts'] = None
         merge_data['Promo Discounts'] = None
         merge_data['Other Income'] = None
