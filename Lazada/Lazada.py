@@ -221,17 +221,26 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
 
         merge_data['Terms'] = None
         merge_data['Location'] = None
-        merge_data['Memo'] = None
+
+        merge_data['Memo'] = merge_data['DISPATCH DATE'].dt.strftime('%m/%Y')
 
         merge_data['ItemDescription'] = merge_data['Material Description']
+
+        merge_data['ItemRate'] = None
+        merge_data['*ItemTaxCode'] = "12% S"
+        merge_data['ItemTaxAmount'] = None
+        merge_data['Currency'] = None
+        merge_data['Service Date'] = None
+
         
         # Rename columns and reorder
         merge_data = merge_data.rename(columns={
             'ORDER ID': '*InvoiceNo',
             'DISPATCH DATE': '*InvoiceDate',
             'Material Description': 'Item(Product/Service)',
-
-        })[['*InvoiceNo', '*Customer', '*InvoiceDate', 'DISPATCHED DATE + 30 DAYS', 'Terms', 'Location', 'Memo', 'Item(Product/Service)', 'ItemDescription']]
+            'Qty': 'ItemQuantity',
+            'GROSS SALES': '*ItemAmount',
+        })[['*InvoiceNo', '*Customer', '*InvoiceDate', 'DISPATCHED DATE + 30 DAYS', 'Terms', 'Location', 'Memo', 'Item(Product/Service)', 'ItemDescription', 'ItemQuantity', 'ItemRate', '*ItemTaxCode', 'ItemTaxAmount', 'Currency', 'Service Date']]
         
 
         # Convert '*InvoiceDate' to datetime if it's not already
