@@ -152,37 +152,105 @@ consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
 # Call the function
 generate_consolidation(merged_dir, consolidation_dir)
 
+# def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
+#     input_files = glob.glob(os.path.join(consolidation_dir, '*.xlsx'))
+#     store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
+    
+#     for input_file in input_files:
+#         data = pd.read_excel(input_file)
+        
+#         data = data.rename(columns={'ORDER ID': '*InvoiceNo',
+#                                      'DISPATCH DATE': '*InvoiceDate',
+#                                      'Material Description': 'Item(Product/Service)'
+#                                      })
+        
+#         # Add the '*Customer' column with the specified store name
+#         data['*Customer'] = store_name
+        
+#         # Convert '*InvoiceDate' to datetime if it's not already
+#         if not pd.api.types.is_datetime64_any_dtype(data['*InvoiceDate']):
+#             data['*InvoiceDate'] = pd.to_datetime(data['*InvoiceDate'], errors='coerce')
+        
+#         # Format the '*InvoiceDate' column to MM/DD/YYYY format
+#         data['*InvoiceDate'] = data['*InvoiceDate'].dt.strftime('%m/%d/%Y')
+        
+#         # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
+#         data['*InvoiceNo'] = data['*InvoiceNo'] + data['*InvoiceDate'].str.replace('/', '')
+
+#         # Set DISPATCHED DATE + 30 DAYS as None
+#         data['DISPATCHED DATE + 30 DAYS'] = None
+#         data['Terms'] = None
+#         data['Location'] = None
+#         data['Memo'] = None
+        
+#         # Reorder columns
+#         data = data[['*InvoiceNo', '*Customer', '*InvoiceDate', 'DISPATCHED DATE + 30 DAYS', 'Terms', 'Location', 'Memo', 'Item(Product/Service)', 'Item(Product/Service)']]
+        
+#         filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
+#         output_path = os.path.join(quickbooks_dir, filename)
+#         data.to_excel(output_path, index=False)
+#         print(f"QuickBooks upload file generated and saved to: {output_path}")
+
+# # Define directories
+# consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
+# quickbooks_dir = os.path.join(parent_dir, 'Outbound', 'QuickBooks')
+
+# # Call the function
+# generate_quickbook_upload(consolidation_dir, quickbooks_dir)
+
 def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
+    # Find any xlsx files in the input directory
     input_files = glob.glob(os.path.join(consolidation_dir, '*.xlsx'))
     store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
-    
+
     for input_file in input_files:
-        data = pd.read_excel(input_file)
+        # Read the Excel file
+        merge_data = pd.read_excel(input_file)
         
-        data = data.rename(columns={'ORDER ID': '*InvoiceNo',
-                                     'DISPATCH DATE': '*InvoiceDate',
-                                     'Material No.': 'Item(Product/Service)'})
+
+
+        merge_data['*Customer'] = store_name
+
+        # Convert 'DISPATCH DATE' to datetime if it's not already
+        if not pd.api.types.is_datetime64_any_dtype(merge_data['DISPATCH DATE']):
+            merge_data['DISPATCH DATE'] = pd.to_datetime(merge_data['DISPATCH DATE'], errors='coerce')
+
+        # Set DISPATCHED DATE + 30 DAYS as None
+        merge_data['DISPATCHED DATE + 30 DAYS'] = merge_data['DISPATCH DATE'] + pd.Timedelta(days=30)
+        merge_data['DISPATCHED DATE + 30 DAYS'] = merge_data['DISPATCHED DATE + 30 DAYS'].dt.strftime('%m/%d/%Y')
+
+        merge_data['Terms'] = None
+        merge_data['Location'] = None
+        merge_data['Memo'] = None
+
+        merge_data['ItemDescription'] = merge_data['Material Description']
         
-        # Add the '*Customer' column with the specified store name
-        data['*Customer'] = store_name
+        # Rename columns and reorder
+        merge_data = merge_data.rename(columns={
+            'ORDER ID': '*InvoiceNo',
+            'DISPATCH DATE': '*InvoiceDate',
+            'Material Description': 'Item(Product/Service)',
+
+        })[['*InvoiceNo', '*Customer', '*InvoiceDate', 'DISPATCHED DATE + 30 DAYS', 'Terms', 'Location', 'Memo', 'Item(Product/Service)', 'ItemDescription']]
         
+
         # Convert '*InvoiceDate' to datetime if it's not already
-        if not pd.api.types.is_datetime64_any_dtype(data['*InvoiceDate']):
-            data['*InvoiceDate'] = pd.to_datetime(data['*InvoiceDate'], errors='coerce')
+        if not pd.api.types.is_datetime64_any_dtype(merge_data['*InvoiceDate']):
+            merge_data['*InvoiceDate'] = pd.to_datetime(merge_data['*InvoiceDate'], errors='coerce')
         
         # Format the '*InvoiceDate' column to MM/DD/YYYY format
-        data['*InvoiceDate'] = data['*InvoiceDate'].dt.strftime('%m/%d/%Y')
+        merge_data['*InvoiceDate'] = merge_data['*InvoiceDate'].dt.strftime('%m/%d/%Y')
         
         # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
-        data['*InvoiceNo'] = data['*InvoiceNo'] + data['*InvoiceDate'].str.replace('/', '')
-        
-        # Reorder columns
-        data = data[['*InvoiceNo', '*Customer', '*InvoiceDate', 'Item(Product/Service)']]
-        
+        merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'] + merge_data['*InvoiceDate'].str.replace('/', '')
+
+        # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
+        
+        # Save the modified data to the output directory
         output_path = os.path.join(quickbooks_dir, filename)
-        data.to_excel(output_path, index=False)
-        print(f"QuickBooks upload file generated and saved to: {output_path}")
+        merge_data.to_excel(output_path, index=False)
+        print(f"Consolidation generated and saved to: {output_path}")
 
 # Define directories
 consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
