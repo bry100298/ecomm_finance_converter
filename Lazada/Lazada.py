@@ -228,7 +228,7 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
 
         merge_data['ItemRate'] = None
         merge_data['*ItemTaxCode'] = "12% S"
-        merge_data['ItemTaxAmount'] = None
+        merge_data['ItemTaxAmount'] = merge_data['GROSS SALES'] / 1.12 * 0.12
         merge_data['Currency'] = None
         merge_data['Service Date'] = None
 
