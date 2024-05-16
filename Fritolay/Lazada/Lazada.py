@@ -5,13 +5,13 @@ import glob
 # store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
 
 # Define parent directory
-parent_dir = 'Lazada'
+parent_dir = 'Fritolay'
 
 # Define directories
-raw_data_dir = os.path.join(parent_dir, 'Inbound', 'RawData')
-sku_dir = os.path.join(parent_dir, 'Inbound', 'SKU')
-consol_order_report_dir = os.path.join(parent_dir, 'Inbound', 'ConsolOrderReport')
-merged_dir = os.path.join(parent_dir, 'Inbound', 'Merged')
+raw_data_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'RawData')
+sku_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'SKU')
+consol_order_report_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'ConsolOrderReport')
+merged_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'Merged')
 
 # Function to extract quantity from sellerSku
 def extract_quantity(seller_sku):
@@ -147,56 +147,10 @@ def generate_consolidation(input_dir, output_dir):
         merge_data.to_excel(output_path, index=False)
         print(f"Consolidation generated and saved to: {output_path}")
 
-consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
+consolidation_dir = os.path.join(parent_dir, 'Lazada', 'Outbound', 'Consolidation')
 
 # Call the function
 generate_consolidation(merged_dir, consolidation_dir)
-
-# def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
-#     input_files = glob.glob(os.path.join(consolidation_dir, '*.xlsx'))
-#     store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
-    
-#     for input_file in input_files:
-#         data = pd.read_excel(input_file)
-        
-#         data = data.rename(columns={'ORDER ID': '*InvoiceNo',
-#                                      'DISPATCH DATE': '*InvoiceDate',
-#                                      'Material Description': 'Item(Product/Service)'
-#                                      })
-        
-#         # Add the '*Customer' column with the specified store name
-#         data['*Customer'] = store_name
-        
-#         # Convert '*InvoiceDate' to datetime if it's not already
-#         if not pd.api.types.is_datetime64_any_dtype(data['*InvoiceDate']):
-#             data['*InvoiceDate'] = pd.to_datetime(data['*InvoiceDate'], errors='coerce')
-        
-#         # Format the '*InvoiceDate' column to MM/DD/YYYY format
-#         data['*InvoiceDate'] = data['*InvoiceDate'].dt.strftime('%m/%d/%Y')
-        
-#         # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
-#         data['*InvoiceNo'] = data['*InvoiceNo'] + data['*InvoiceDate'].str.replace('/', '')
-
-#         # Set DISPATCHED DATE + 30 DAYS as None
-#         data['DISPATCHED DATE + 30 DAYS'] = None
-#         data['Terms'] = None
-#         data['Location'] = None
-#         data['Memo'] = None
-        
-#         # Reorder columns
-#         data = data[['*InvoiceNo', '*Customer', '*InvoiceDate', 'DISPATCHED DATE + 30 DAYS', 'Terms', 'Location', 'Memo', 'Item(Product/Service)', 'Item(Product/Service)']]
-        
-#         filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
-#         output_path = os.path.join(quickbooks_dir, filename)
-#         data.to_excel(output_path, index=False)
-#         print(f"QuickBooks upload file generated and saved to: {output_path}")
-
-# # Define directories
-# consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
-# quickbooks_dir = os.path.join(parent_dir, 'Outbound', 'QuickBooks')
-
-# # Call the function
-# generate_quickbook_upload(consolidation_dir, quickbooks_dir)
 
 def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
     # Find any xlsx files in the input directory
@@ -262,8 +216,8 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
         print(f"Consolidation generated and saved to: {output_path}")
 
 # Define directories
-consolidation_dir = os.path.join(parent_dir, 'Outbound', 'Consolidation')
-quickbooks_dir = os.path.join(parent_dir, 'Outbound', 'QuickBooks')
+consolidation_dir = os.path.join(parent_dir, 'Lazada', 'Outbound', 'Consolidation')
+quickbooks_dir = os.path.join(parent_dir, 'Lazada', 'Outbound', 'QuickBooks')
 
 # Call the function
 generate_quickbook_upload(consolidation_dir, quickbooks_dir)
