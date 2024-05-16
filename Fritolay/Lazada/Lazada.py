@@ -33,6 +33,11 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
         for consol_order_report_file in consol_order_report_files:
             consol_order_report = pd.read_excel(consol_order_report_file)
+
+            # Convert 'orderItemId' and 'Order Number.' to string type
+            raw_data['orderItemId'] = raw_data['orderItemId'].astype(str)
+            consol_order_report['Order Number.'] = consol_order_report['Order Number.'].astype(str)
+
             # Perform left join with RawData as base DataFrame
             merged_data = pd.merge(raw_data, consol_order_report, how='left', left_on='orderItemId', right_on='Order Number.')
         
