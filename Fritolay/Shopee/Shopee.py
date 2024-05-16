@@ -11,7 +11,7 @@ sku_dir = os.path.join(parent_dir, 'Shopee', 'Inbound', 'SKU')
 consol_order_report_dir = os.path.join(parent_dir, 'Shopee', 'Inbound', 'ConsolOrderReport')
 merged_dir = os.path.join(parent_dir, 'Shopee', 'Inbound', 'Merged')
 
-# Function to extract quantity from sellerSku
+# Function to extract quantity from SKU Reference No.
 def extract_quantity(seller_sku):
     if 'x' in seller_sku:
         return int(seller_sku.split('x')[1])
@@ -32,33 +32,33 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         for consol_order_report_file in consol_order_report_files:
             consol_order_report = pd.read_excel(consol_order_report_file)
 
-            # Convert 'orderItemId' and 'Order Number.' to string type
-            raw_data['orderItemId'] = raw_data['orderItemId'].astype(str)
+            # Convert 'Order ID' and 'Order Number.' to string type
+            raw_data['Order ID'] = raw_data['Order ID'].astype(str)
             consol_order_report['Order Number.'] = consol_order_report['Order Number.'].astype(str)
 
             # Perform left join with RawData as base DataFrame
-            merged_data = pd.merge(raw_data, consol_order_report, how='left', left_on='orderItemId', right_on='Order Number.')
+            merged_data = pd.merge(raw_data, consol_order_report, how='left', left_on='Order ID', right_on='Order Number.')
         
-        # Create new column "Qty" based on "sellerSku"
-        merged_data['Qty'] = merged_data['sellerSku'].apply(extract_quantity)
+        # Create new column "Qty" based on "SKU Reference No."
+        merged_data['Qty'] = merged_data['SKU Reference No.'].apply(extract_quantity)
         
-        # Remove letter "x" from "sellerSku"
-        # merged_data['sellerSku'] = merged_data['sellerSku'].str.replace('x', '')
-        # Remove 'x' and any digits after 'x' in sellerSku
-        merged_data['sellerSku'] = merged_data['sellerSku'].apply(lambda x: x.split('x')[0] if 'x' in x else x)
+        # Remove letter "x" from "SKU Reference No."
+        # merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].str.replace('x', '')
+        # Remove 'x' and any digits after 'x' in SKU Reference No.
+        merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].apply(lambda x: x.split('x')[0] if 'x' in x else x)
 
 
-        # Drop rows with duplicate "orderItemId"
-        merged_data = merged_data.drop_duplicates(subset='orderItemId', keep='first')
+        # Drop rows with duplicate "Order ID"
+        merged_data = merged_data.drop_duplicates(subset='Order ID', keep='first')
 
         # Get list of .xlsx files in SKU directory
         sku_files = glob.glob(os.path.join(sku_dir, '*.xlsx'))
         for sku_file in sku_files:
             sku_data = pd.read_excel(sku_file)
             # Perform left join with RawData as base DataFrame
-            merged_data['sellerSku'] = merged_data['sellerSku'].astype(str)
+            merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].astype(str)
             sku_data['BRI MATCODE'] = sku_data['BRI MATCODE'].astype(str)
-            merged_data = pd.merge(merged_data, sku_data, how='left', left_on='sellerSku', right_on='BRI MATCODE')
+            merged_data = pd.merge(merged_data, sku_data, how='left', left_on='SKU Reference No.', right_on='BRI MATCODE')
         
         # Generate filename
         filename = os.path.basename(raw_data_file).replace(".xlsx", "_merged.xlsx")
@@ -80,7 +80,7 @@ def generate_consolidation(input_dir, output_dir):
         
         # Calculate GROSS SALES based on BRI SELLING PRICE (SRP) and Qty
         merge_data['GROSS SALES'] = merge_data['BRI SELLING PRICE (SRP)'] * merge_data['Qty']
-        merge_data['SC SALES'] = merge_data['unitPrice'] * merge_data['Qty']
+        merge_data['SC SALES'] = merge_data['Deal Price'] * merge_data['Qty']
         merge_data['COGS PRICE'] = merge_data['COGS'] * merge_data['Qty']
 
         # Calculate Promo Discounts based on conditions
@@ -117,22 +117,24 @@ def generate_consolidation(input_dir, output_dir):
         # merge_data['PAYMENT'] = None
         # merge_data['Variance'] = None
         # merge_data['%'] = None
+        merge_data['Voucher discounts'] = None
+        # merge_data['Material Description'] = None
 
         # Rename columns and reorder
         merge_data = merge_data.rename(columns={
-            'trackingCode': 'Trucking #',
-            'orderItemId': 'ORDER ID',
-            'sellerSku': 'Material No.',
+            'Tracking Number*': 'Trucking #',
+            'Order ID': 'ORDER ID',
+            'SKU Reference No.': 'Material No.',
             'Qty': 'Qty',
             'createTime': 'Order Creation Date',
-            'unitPrice': 'SC Unit Price',
-            'itemName': 'Material Description',
-            'sellerDiscountTotal': 'Voucher discounts',
-            'orderItemId': 'ORDER ID',
-            'status': 'DELIVERY STATUS',
+            'Deal Price': 'SC Unit Price',
+            'Product Name_x': 'Material Description',
+            # 'sellerDiscountTotal': 'Voucher discounts',
+            'Order ID': 'ORDER ID',
+            'Order Status': 'DELIVERY STATUS',
             'Out of Warehouse': 'DISPATCH DATE',
-            'wareHouse': 'wareHouse',
-            'buyerFailedDeliveryReason': 'Cancelled Reason',
+            'Warehouse name': 'wareHouse',
+            'Cancel reason': 'Cancelled Reason',
         })[['Trucking #', 'ORDER ID', 'Material No.', 'Qty', 'Order Creation Date', 'SC Unit Price', 'Material Description', 'GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts', 'Promo Discounts', 'Other Income', 'ORDER ID', 'DELIVERY STATUS', 'DISPATCH DATE', 'wareHouse', 'Cancelled Reason']]
         
 
@@ -208,7 +210,7 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
         merge_data['*InvoiceDate'] = merge_data['*InvoiceDate'].dt.strftime('%m/%d/%Y')
         
         # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
-        merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'] + merge_data['*InvoiceDate'].str.replace('/', '')
+        # merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'] + merge_data['*InvoiceDate'].str.replace('/', '')
 
         # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")

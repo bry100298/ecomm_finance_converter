@@ -210,7 +210,7 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
         merge_data['*InvoiceDate'] = merge_data['*InvoiceDate'].dt.strftime('%m/%d/%Y')
         
         # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
-        merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'] + merge_data['*InvoiceDate'].str.replace('/', '')
+        # merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'] + merge_data['*InvoiceDate'].str.replace('/', '')
 
         # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
