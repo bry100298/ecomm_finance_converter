@@ -32,47 +32,50 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         raw_data = pd.read_excel(raw_data_file)
 
         # Clean SKU Reference No. in raw_data
-        raw_data['Cleaned SKU'] = raw_data['SKU Reference No.'].apply(clean_sku)
+        # raw_data['Cleaned SKU'] = raw_data['SKU Reference No.'].apply(clean_sku)
+        raw_data['Cleaned SKU'] = raw_data['SKU Reference No.'].apply(lambda x: x.split('x')[0] if 'x' in x else x)
 
-        # Get list of .xlsx and .xls files in consol order report directory
+        # Get list of .xls files in consol order report directory
         consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xlsx'))
-        consol_order_report_files += glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
+        # consol_order_report_files += glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
 
-        # Read all ConsolOrderReport files into a list of dataframes
-        consol_order_report_dfs = []
-        for consol_order_report_file in consol_order_report_files:
-            df = pd.read_excel(consol_order_report_file)
-            consol_order_report_dfs.append(df)
-
-        # Concatenate all ConsolOrderReport dataframes into one
-        consol_order_report = pd.concat(consol_order_report_dfs, ignore_index=True)
-
-        # Filter consol_order_report for the desired Order Source
-        consol_order_report_filtered = consol_order_report[
-            consol_order_report['Order Source'] == 'Shopee Philippines (Shopee Frito-Lay)'
-        ]
-
-        # Convert 'Order ID' and 'Order Number.' to string type
-        raw_data['Order ID'] = raw_data['Order ID'].astype(str)
-        consol_order_report_filtered['Order Number.'] = consol_order_report_filtered['Order Number.'].astype(str)
-
-        # Convert 'Product Sku' to string type to match with 'Cleaned SKU'
-        raw_data['Cleaned SKU'] = raw_data['Cleaned SKU'].astype(str)
-        consol_order_report_filtered['Product Sku'] = consol_order_report_filtered['Product Sku'].astype(str)
-
-        # Perform left join with RawData as base DataFrame on both Order ID and Cleaned SKU/Product Sku
-        merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', 
-                               left_on=['Order ID', 'Cleaned SKU'], 
-                               right_on=['Order Number.', 'Product Sku'])
         
+        for consol_order_report_file in consol_order_report_files:
+            consol_order_report = pd.read_excel(consol_order_report_file)
+
+            # Filter consol_order_report for the desired Order Source
+            consol_order_report_filtered = consol_order_report[
+                consol_order_report['Order Source'] == 'Shopee Philippines (Shopee Frito-Lay)'
+            ]
+
+            # Convert 'Order ID' and 'Order Number.' to string type
+            raw_data['Order ID'] = raw_data['Order ID'].astype(str)
+            consol_order_report_filtered['Order Number.'] = consol_order_report_filtered['Order Number.'].astype(str)
+
+            # Convert 'Product Sku' to string type to match with 'Cleaned SKU'
+            raw_data['Cleaned SKU'] = raw_data['Cleaned SKU'].astype(str)
+            consol_order_report_filtered['Product Sku'] = consol_order_report_filtered['Product Sku'].astype(str)
+
+            # Perform left join with RawData as base DataFrame
+            # merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', left_on='Order ID', right_on='Order Number.')
+
+            # Perform left join with RawData as base DataFrame on both Order ID and Cleaned SKU/Product Sku
+            merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', 
+                                   left_on=['Order ID', 'Cleaned SKU'], 
+                                   right_on=['Order Number.', 'Product Sku'])
+            
         # Create new column "Qty" based on "SKU Reference No."
         merged_data['Qty'] = merged_data['SKU Reference No.'].apply(extract_quantity)
         merged_data['Qty'] = merged_data['Qty'] * merged_data['Quantity']
 
+        
+        # Remove letter "x" from "SKU Reference No."
+        # merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].str.replace('x', '')
         # Remove 'x' and any digits after 'x' in SKU Reference No.
-        merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].apply(clean_sku)
+        merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].apply(lambda x: x.split('x')[0] if 'x' in x else x)
 
         # Drop rows with duplicate "Order ID"
+        # merged_data = merged_data.drop_duplicates(subset='Order ID', keep='first')
         merged_data = merged_data.drop_duplicates(subset=['Order ID', 'Cleaned SKU', 'Qty'], keep='first')
 
         # Get list of .xlsx files in SKU directory
@@ -121,7 +124,28 @@ def generate_consolidation(input_dir, output_dir):
             else:
                 merge_data.at[index, 'Other Income'] = 0
 
+        # Add a column for GROSS SALES filled with None
+        # merge_data['GROSS SALES'] = None
+        # merge_data['SC SALES'] = None
+        # merge_data['COGS PRICE'] = None
+        # merge_data['Voucher discounts'] = None
+        # merge_data['Promo Discounts'] = None
+        
+        # Add a column for GROSS SALES filled with None
+        # merge_data['GROSS SALES'] = None
+        # merge_data['SC SALES'] = None
+        # merge_data['COGS PRICE'] = None
+        # merge_data['Voucher discounts'] = None
+        # merge_data['Promo Discounts'] = None
+        # merge_data['Other Income'] = None
+        # merge_data['UDS'] = None
+        # merge_data['PAID/UNPAID'] = None
+        # merge_data['SALES'] = None
+        # merge_data['PAYMENT'] = None
+        # merge_data['Variance'] = None
+        # merge_data['%'] = None
         merge_data['Voucher discounts'] = None
+        # merge_data['Material Description'] = None
 
         # Rename columns and reorder
         merge_data = merge_data.rename(columns={
@@ -140,6 +164,7 @@ def generate_consolidation(input_dir, output_dir):
             'Cancel reason': 'Cancelled Reason',
         })[['Trucking #', 'ORDER ID', 'Material No.', 'Qty', 'Order Creation Date', 'SC Unit Price', 'Material Description', 'GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts', 'Promo Discounts', 'Other Income', 'ORDER ID', 'DELIVERY STATUS', 'DISPATCH DATE', 'wareHouse', 'Cancelled Reason']]
         
+
         # Fill NaN values with 0 in specific columns
         columns_to_fill = ['GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts']
         merge_data[columns_to_fill] = merge_data[columns_to_fill].fillna(0)
