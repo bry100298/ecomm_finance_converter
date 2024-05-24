@@ -121,9 +121,7 @@ def generate_consolidation(input_dir, output_dir):
             else:
                 merge_data.at[index, 'Other Income'] = 0
 
-        # merge_data['Voucher discounts'] = None
-        # Calculate Voucher discounts
-        merge_data['Voucher discounts'] = merge_data.groupby('Order ID')['Seller Voucher(PHP)'].transform(lambda x: x / x.count())
+        merge_data['Voucher discounts'] = None
 
         # Rename columns and reorder
         merge_data = merge_data.rename(columns={
