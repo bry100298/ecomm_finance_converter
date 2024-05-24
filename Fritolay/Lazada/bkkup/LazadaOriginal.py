@@ -20,10 +20,6 @@ def extract_quantity(seller_sku):
     else:
         return 1
 
-# Function to clean SKU Reference No.
-def clean_sku(sku):
-    return sku.split('x')[0] if 'x' in sku else sku
-
 # Function to merge data from different directories
 def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
     # Get list of .xlsx files in raw data directory
@@ -32,50 +28,31 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
     # Merge files
     for raw_data_file in raw_data_files:
         raw_data = pd.read_excel(raw_data_file)
-
-        # Clean sellerSku in raw_data
-        raw_data['Cleaned SKU'] = raw_data['sellerSku'].apply(clean_sku)
-
-        # Get list of .xlsx and .xls files in consol order report directory
-        consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xlsx'))
-        consol_order_report_files += glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
-
-        # Read all ConsolOrderReport files into a list of dataframes
-        consol_order_report_dfs = []
+        
+        # Get list of .xls files in consol order report directory
+        consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
         for consol_order_report_file in consol_order_report_files:
-            df = pd.read_excel(consol_order_report_file)
-            consol_order_report_dfs.append(df)
+            consol_order_report = pd.read_excel(consol_order_report_file)
 
-        # Concatenate all ConsolOrderReport dataframes into one
-        consol_order_report = pd.concat(consol_order_report_dfs, ignore_index=True)
+            # Convert 'orderItemId' and 'Order Number.' to string type
+            raw_data['orderItemId'] = raw_data['orderItemId'].astype(str)
+            consol_order_report['Order Number.'] = consol_order_report['Order Number.'].astype(str)
 
-        # Filter consol_order_report for the desired Order Source
-        consol_order_report_filtered = consol_order_report[
-            consol_order_report['Order Source'] == 'Lazada Philippines (Lazada Frito-Lay)'
-        ]
-
-        # Convert 'orderNumber' and 'Order Number.' to string type
-        raw_data['orderNumber'] = raw_data['orderNumber'].astype(str)
-        consol_order_report_filtered['Order Number.'] = consol_order_report_filtered['Order Number.'].astype(str)
-
-        # Convert 'Product Sku' to string type to match with 'Cleaned SKU'
-        raw_data['Cleaned SKU'] = raw_data['Cleaned SKU'].astype(str)
-        consol_order_report_filtered['Product Sku'] = consol_order_report_filtered['Product Sku'].astype(str)
-
-        # Perform left join with RawData as base DataFrame on both orderNumber and Cleaned SKU/Product Sku
-        merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', 
-                               left_on=['orderNumber', 'Cleaned SKU'], 
-                               right_on=['Order Number.', 'Product Sku'])
+            # Perform left join with RawData as base DataFrame
+            merged_data = pd.merge(raw_data, consol_order_report, how='left', left_on='orderItemId', right_on='Order Number.')
         
         # Create new column "Qty" based on "sellerSku"
         merged_data['Qty'] = merged_data['sellerSku'].apply(extract_quantity)
-        # merged_data['Qty'] = merged_data['Qty'] * merged_data['Quantity']
-
+        
+        # Remove letter "x" from "sellerSku"
+        # merged_data['sellerSku'] = merged_data['sellerSku'].str.replace('x', '')
         # Remove 'x' and any digits after 'x' in sellerSku
-        merged_data['sellerSku'] = merged_data['sellerSku'].apply(clean_sku)
+        merged_data['sellerSku'] = merged_data['sellerSku'].apply(lambda x: x.split('x')[0] if 'x' in x else x)
 
-        # Drop rows with duplicate "orderNumber"
-        # merged_data = merged_data.drop_duplicates(subset=['orderNumber', 'Cleaned SKU', 'Qty'], keep='first')
+
+        # Drop rows with duplicate "orderItemId"
+        # merged_data = merged_data.drop_duplicates(subset='orderItemId', keep='first')
+        # merged_data = merged_data.drop_duplicates()
 
         # Get list of .xlsx files in SKU directory
         sku_files = glob.glob(os.path.join(sku_dir, '*.xlsx'))
@@ -85,9 +62,6 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
             merged_data['sellerSku'] = merged_data['sellerSku'].astype(str)
             sku_data['BRI MATCODE'] = sku_data['BRI MATCODE'].astype(str)
             merged_data = pd.merge(merged_data, sku_data, how='left', left_on='sellerSku', right_on='BRI MATCODE')
-        
-        # Ensure 'orderNumber' is of type str
-        merged_data['orderNumber'] = merged_data['orderNumber'].astype(str)
         
         # Generate filename
         filename = os.path.basename(raw_data_file).replace(".xlsx", "_merged.xlsx")
@@ -150,14 +124,14 @@ def generate_consolidation(input_dir, output_dir):
         # Rename columns and reorder
         merge_data = merge_data.rename(columns={
             'trackingCode': 'Trucking #',
-            'orderNumber': 'ORDER ID',
+            'orderItemId': 'ORDER ID',
             'sellerSku': 'Material No.',
             'Qty': 'Qty',
             'createTime': 'Order Creation Date',
             'unitPrice': 'SC Unit Price',
             'itemName': 'Material Description',
             'sellerDiscountTotal': 'Voucher discounts',
-            'orderNumber': 'ORDER ID',
+            'orderItemId': 'ORDER ID',
             'status': 'DELIVERY STATUS',
             'Out of Warehouse': 'DISPATCH DATE',
             'wareHouse': 'wareHouse',
@@ -168,9 +142,6 @@ def generate_consolidation(input_dir, output_dir):
         # Fill NaN values with 0 in specific columns
         columns_to_fill = ['GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts']
         merge_data[columns_to_fill] = merge_data[columns_to_fill].fillna(0)
-
-        # Ensure 'ORDER ID' is of type str
-        merge_data['ORDER ID'] = merge_data['ORDER ID'].astype(str)
 
         # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_consolidated.xlsx")
@@ -241,9 +212,6 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
         
         # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
         # merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'] + merge_data['*InvoiceDate'].str.replace('/', '')
-
-        # Ensure '*InvoiceNo' is of type str
-        merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'].astype(str)
 
         # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
