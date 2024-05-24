@@ -51,7 +51,8 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
 
 
         # Drop rows with duplicate "orderItemId"
-        merged_data = merged_data.drop_duplicates(subset='orderItemId', keep='first')
+        # merged_data = merged_data.drop_duplicates(subset='orderItemId', keep='first')
+        # merged_data = merged_data.drop_duplicates()
 
         # Get list of .xlsx files in SKU directory
         sku_files = glob.glob(os.path.join(sku_dir, '*.xlsx'))

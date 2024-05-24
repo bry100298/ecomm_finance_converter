@@ -18,6 +18,10 @@ def extract_quantity(seller_sku):
     else:
         return 1
 
+# Function to clean SKU Reference No.
+def clean_sku(sku):
+    return sku.split('x')[0] if 'x' in sku else sku
+
 # Function to merge data from different directories
 def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
     # Get list of .xlsx files in raw data directory
@@ -26,30 +30,53 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
     # Merge files
     for raw_data_file in raw_data_files:
         raw_data = pd.read_excel(raw_data_file)
-        
+
+        # Clean SKU Reference No. in raw_data
+        # raw_data['Cleaned SKU'] = raw_data['SKU Reference No.'].apply(clean_sku)
+        raw_data['Cleaned SKU'] = raw_data['SKU Reference No.'].apply(lambda x: x.split('x')[0] if 'x' in x else x)
+
         # Get list of .xls files in consol order report directory
-        consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
+        consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xlsx'))
+        consol_order_report_files += glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
+
+        
         for consol_order_report_file in consol_order_report_files:
             consol_order_report = pd.read_excel(consol_order_report_file)
 
+            # Filter consol_order_report for the desired Order Source
+            consol_order_report_filtered = consol_order_report[
+                consol_order_report['Order Source'] == 'Shopee Philippines (Shopee Frito-Lay)'
+            ]
+
             # Convert 'Order ID' and 'Order Number.' to string type
             raw_data['Order ID'] = raw_data['Order ID'].astype(str)
-            consol_order_report['Order Number.'] = consol_order_report['Order Number.'].astype(str)
+            consol_order_report_filtered['Order Number.'] = consol_order_report_filtered['Order Number.'].astype(str)
+
+            # Convert 'Product Sku' to string type to match with 'Cleaned SKU'
+            raw_data['Cleaned SKU'] = raw_data['Cleaned SKU'].astype(str)
+            consol_order_report_filtered['Product Sku'] = consol_order_report_filtered['Product Sku'].astype(str)
 
             # Perform left join with RawData as base DataFrame
-            merged_data = pd.merge(raw_data, consol_order_report, how='left', left_on='Order ID', right_on='Order Number.')
-        
+            # merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', left_on='Order ID', right_on='Order Number.')
+
+            # Perform left join with RawData as base DataFrame on both Order ID and Cleaned SKU/Product Sku
+            merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', 
+                                   left_on=['Order ID', 'Cleaned SKU'], 
+                                   right_on=['Order Number.', 'Product Sku'])
+            
         # Create new column "Qty" based on "SKU Reference No."
         merged_data['Qty'] = merged_data['SKU Reference No.'].apply(extract_quantity)
+        merged_data['Qty'] = merged_data['Qty'] * merged_data['Quantity']
+
         
         # Remove letter "x" from "SKU Reference No."
         # merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].str.replace('x', '')
         # Remove 'x' and any digits after 'x' in SKU Reference No.
         merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].apply(lambda x: x.split('x')[0] if 'x' in x else x)
 
-
         # Drop rows with duplicate "Order ID"
-        merged_data = merged_data.drop_duplicates(subset='Order ID', keep='first')
+        # merged_data = merged_data.drop_duplicates(subset='Order ID', keep='first')
+        merged_data = merged_data.drop_duplicates(subset=['Order ID', 'Cleaned SKU', 'Qty'], keep='first')
 
         # Get list of .xlsx files in SKU directory
         sku_files = glob.glob(os.path.join(sku_dir, '*.xlsx'))
