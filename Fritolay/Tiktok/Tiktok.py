@@ -6,12 +6,12 @@ import glob
 parent_dir = 'Fritolay'
 
 # Define directories
-raw_data_dir = os.path.join(parent_dir, 'Shopee', 'Inbound', 'RawData')
-sku_dir = os.path.join(parent_dir, 'Shopee', 'Inbound', 'SKU')
-consol_order_report_dir = os.path.join(parent_dir, 'Shopee', 'Inbound', 'ConsolOrderReport')
-merged_dir = os.path.join(parent_dir, 'Shopee', 'Inbound', 'Merged')
+raw_data_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'RawData')
+sku_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'SKU')
+consol_order_report_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'ConsolOrderReport')
+merged_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'Merged')
 
-# Function to extract quantity from SKU Reference No.
+# Function to extract quantity from Seller SKU
 def extract_quantity(seller_sku):
     if 'x' in seller_sku:
         return int(seller_sku.split('x')[1])
@@ -31,8 +31,8 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
     for raw_data_file in raw_data_files:
         raw_data = pd.read_excel(raw_data_file)
 
-        # Clean SKU Reference No. in raw_data
-        raw_data['Cleaned SKU'] = raw_data['SKU Reference No.'].apply(clean_sku)
+        # Clean Seller SKU in raw_data
+        raw_data['Cleaned SKU'] = raw_data['Seller SKU'].apply(clean_sku)
 
         # Get list of .xlsx and .xls files in consol order report directory
         consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xlsx'))
@@ -49,7 +49,7 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
 
         # Filter consol_order_report for the desired Order Source
         consol_order_report_filtered = consol_order_report[
-            consol_order_report['Order Source'] == 'Shopee Philippines (Shopee Frito-Lay)'
+            consol_order_report['Order Source'] == 'Tiktok Philippines (Tiktok Philippines - PEPSICO)'
         ]
 
         # Convert 'Order ID' and 'Order Number.' to string type
@@ -61,34 +61,48 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         consol_order_report_filtered['Product Sku'] = consol_order_report_filtered['Product Sku'].astype(str)
 
         # Perform left join with RawData as base DataFrame on both Order ID and Cleaned SKU/Product Sku
-        merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', 
-                               left_on=['Order ID', 'Cleaned SKU'], 
-                               right_on=['Order Number.', 'Product Sku'])
-        
-        # Create new column "Qty" based on "SKU Reference No."
-        merged_data['Qty'] = merged_data['SKU Reference No.'].apply(extract_quantity)
-        merged_data['Qty'] = merged_data['Qty'] * merged_data['Quantity']
+        # merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', 
+        #                        left_on=['Order ID', 'Cleaned SKU'], 
+        #                        right_on=['Order Number.', 'Product Sku'])
 
-        # Remove 'x' and any digits after 'x' in SKU Reference No.
-        merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].apply(clean_sku)
+        order_warehouse_mapping = (
+            consol_order_report_filtered[['Order Number.', 'Out of Warehouse']]
+            .drop_duplicates('Order Number.')
+            .set_index('Order Number.')
+            .to_dict()['Out of Warehouse']
+        )
+
+        # Map 'Out of Warehouse' to raw_data using the dictionary
+        raw_data['Out of Warehouse'] = raw_data['Order ID'].map(order_warehouse_mapping)
+
+        
+        # Create new column "Qty" based on "Seller SKU"
+        raw_data['Qty'] = raw_data['Seller SKU'].apply(extract_quantity)
+        raw_data['Qty'] = raw_data['Qty'] * raw_data['Quantity']
+
+        # Remove 'x' and any digits after 'x' in Seller SKU
+        raw_data['Seller SKU'] = raw_data['Seller SKU'].apply(clean_sku)
 
         # Drop rows with duplicate "Order ID"
-        merged_data = merged_data.drop_duplicates(subset=['Order ID', 'Cleaned SKU', 'Qty'], keep='first')
+        # raw_data = raw_data.drop_duplicates(subset=['Order ID', 'Cleaned SKU', 'Qty'], keep='first')
 
         # Get list of .xlsx files in SKU directory
         sku_files = glob.glob(os.path.join(sku_dir, '*.xlsx'))
         for sku_file in sku_files:
             sku_data = pd.read_excel(sku_file)
             # Perform left join with RawData as base DataFrame
-            merged_data['SKU Reference No.'] = merged_data['SKU Reference No.'].astype(str)
+            raw_data['Seller SKU'] = raw_data['Seller SKU'].astype(str)
             sku_data['BRI MATCODE'] = sku_data['BRI MATCODE'].astype(str)
-            merged_data = pd.merge(merged_data, sku_data, how='left', left_on='SKU Reference No.', right_on='BRI MATCODE')
+            raw_data = pd.merge(raw_data, sku_data, how='left', left_on='Seller SKU', right_on='BRI MATCODE')
+
+        # Ensure 'orderNumber' is of type str
+        raw_data['Order ID'] = raw_data['Order ID'].astype(str)
         
         # Generate filename
         filename = os.path.basename(raw_data_file).replace(".xlsx", "_merged.xlsx")
         # Save merged data
         merged_path = os.path.join(merged_dir, filename)
-        merged_data.to_excel(merged_path, index=False)
+        raw_data.to_excel(merged_path, index=False)
         print(f"Merged data from {os.path.basename(raw_data_file)}, ConsolOrderReport, and SKU and saved to {merged_path}")
 
 # Merge data from different directories
@@ -121,28 +135,34 @@ def generate_consolidation(input_dir, output_dir):
             else:
                 merge_data.at[index, 'Other Income'] = 0
 
+        merge_data['SC Unit Price'] = None
         merge_data['Voucher discounts'] = None
+        # Calculate Voucher discounts
+        # merge_data['Voucher discounts'] = merge_data.groupby('Order ID')['Seller Voucher(PHP)'].transform(lambda x: x / x.count())
 
         # Rename columns and reorder
         merge_data = merge_data.rename(columns={
-            'Tracking Number*': 'Trucking #',
+            'Tracking ID': 'Trucking #',
             'Order ID': 'ORDER ID',
-            'SKU Reference No.': 'Material No.',
+            'Seller SKU': 'Material No.',
             'Qty': 'Qty',
-            'createTime': 'Order Creation Date',
-            'Deal Price': 'SC Unit Price',
-            'Product Name_x': 'Material Description',
+            'Created Time': 'Order Creation Date',
+            # 'Deal Price': 'SC Unit Price',
+            'Product Name': 'Material Description',
             # 'sellerDiscountTotal': 'Voucher discounts',
             'Order ID': 'ORDER ID',
             'Order Status': 'DELIVERY STATUS',
             'Out of Warehouse': 'DISPATCH DATE',
-            'Warehouse name': 'wareHouse',
-            'Cancel reason': 'Cancelled Reason',
+            'Warehouse Name': 'wareHouse',
+            'Cancel Reason': 'Cancelled Reason',
         })[['Trucking #', 'ORDER ID', 'Material No.', 'Qty', 'Order Creation Date', 'SC Unit Price', 'Material Description', 'GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts', 'Promo Discounts', 'Other Income', 'ORDER ID', 'DELIVERY STATUS', 'DISPATCH DATE', 'wareHouse', 'Cancelled Reason']]
         
         # Fill NaN values with 0 in specific columns
         columns_to_fill = ['GROSS SALES', 'SC SALES', 'COGS PRICE', 'Voucher discounts']
         merge_data[columns_to_fill] = merge_data[columns_to_fill].fillna(0)
+
+        # Ensure 'ORDER ID' is of type str
+        merge_data['ORDER ID'] = merge_data['ORDER ID'].astype(str)
 
         # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_consolidated.xlsx")
@@ -154,7 +174,7 @@ def generate_consolidation(input_dir, output_dir):
         merge_data.to_excel(output_path, index=False)
         print(f"Consolidation generated and saved to: {output_path}")
 
-consolidation_dir = os.path.join(parent_dir, 'Shopee', 'Outbound', 'Consolidation')
+consolidation_dir = os.path.join(parent_dir, 'Tiktok', 'Outbound', 'Consolidation')
 
 # Call the function
 generate_consolidation(merged_dir, consolidation_dir)
@@ -162,7 +182,7 @@ generate_consolidation(merged_dir, consolidation_dir)
 def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
     # Find any xlsx files in the input directory
     input_files = glob.glob(os.path.join(consolidation_dir, '*.xlsx'))
-    store_name = 'SHOPEE PHILIPPINES (SHOPEE FRITOLAY)'
+    store_name = 'Tiktok Philippines (Tiktok Philippines - PEPSICO)'
 
     for input_file in input_files:
         # Read the Excel file
@@ -214,6 +234,9 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
         # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
         # merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'] + merge_data['*InvoiceDate'].str.replace('/', '')
 
+        # Ensure '*InvoiceNo' is of type str
+        merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'].astype(str)
+        
         # Generate filename
         filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
         
@@ -223,8 +246,8 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
         print(f"Consolidation generated and saved to: {output_path}")
 
 # Define directories
-consolidation_dir = os.path.join(parent_dir, 'Shopee', 'Outbound', 'Consolidation')
-quickbooks_dir = os.path.join(parent_dir, 'Shopee', 'Outbound', 'QuickBooks')
+consolidation_dir = os.path.join(parent_dir, 'Tiktok', 'Outbound', 'Consolidation')
+quickbooks_dir = os.path.join(parent_dir, 'Tiktok', 'Outbound', 'QuickBooks')
 
 # Call the function
 generate_quickbook_upload(consolidation_dir, quickbooks_dir)
