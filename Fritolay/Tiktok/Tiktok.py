@@ -29,7 +29,16 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
     
     # Merge files
     for raw_data_file in raw_data_files:
-        raw_data = pd.read_excel(raw_data_file)
+        # raw_data = pd.read_excel(raw_data_file)
+
+        # Read raw data while skipping the second row (index 1)
+        raw_data = pd.read_excel(raw_data_file, skiprows=lambda x: x in [1])
+
+        # Remove the second row (index 1)
+        # raw_data = raw_data.drop(index=1)
+        # raw_data = raw_data.drop(index=1).reset_index(drop=True)
+        # raw_data = raw_data.drop(1).reset_index(drop=True)
+
 
         # Clean Seller SKU in raw_data
         raw_data['Cleaned SKU'] = raw_data['Seller SKU'].apply(clean_sku)
@@ -78,6 +87,8 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         
         # Create new column "Qty" based on "Seller SKU"
         raw_data['Qty'] = raw_data['Seller SKU'].apply(extract_quantity)
+        # Ensure Quantity is of integer type
+        # raw_data['Quantity'] = raw_data['Quantity'].astype(int)
         raw_data['Qty'] = raw_data['Qty'] * raw_data['Quantity']
 
         # Remove 'x' and any digits after 'x' in Seller SKU
@@ -118,7 +129,14 @@ def generate_consolidation(input_dir, output_dir):
         
         # Calculate GROSS SALES based on BRI SELLING PRICE (SRP) and Qty
         merge_data['GROSS SALES'] = merge_data['BRI SELLING PRICE (SRP)'] * merge_data['Qty']
-        merge_data['SC SALES'] = merge_data['Deal Price'] * merge_data['Qty']
+        # Clean and convert 'SKU Seller Discount' to numeric
+        merge_data['SKU Seller Discount'] = merge_data['SKU Seller Discount'].str.replace('PHP', '').str.replace(',', '').astype(float)
+        merge_data['SKU Unit Original Price'] = merge_data['SKU Unit Original Price'].str.replace('PHP', '').str.replace(',', '').astype(float)
+        merge_data['SC Unit Price'] = (
+            merge_data['SKU Unit Original Price'] - 
+            (merge_data['SKU Seller Discount'] / merge_data['Qty'])
+        )
+        merge_data['SC SALES'] = merge_data['SC Unit Price'] * merge_data['Qty']
         merge_data['COGS PRICE'] = merge_data['COGS'] * merge_data['Qty']
 
         # Calculate Promo Discounts based on conditions
@@ -135,7 +153,7 @@ def generate_consolidation(input_dir, output_dir):
             else:
                 merge_data.at[index, 'Other Income'] = 0
 
-        merge_data['SC Unit Price'] = None
+        
         merge_data['Voucher discounts'] = None
         # Calculate Voucher discounts
         # merge_data['Voucher discounts'] = merge_data.groupby('Order ID')['Seller Voucher(PHP)'].transform(lambda x: x / x.count())
