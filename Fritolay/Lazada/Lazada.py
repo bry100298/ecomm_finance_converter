@@ -63,16 +63,27 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         consol_order_report_filtered['Product Sku'] = consol_order_report_filtered['Product Sku'].astype(str)
 
         # Perform left join with RawData as base DataFrame on both orderNumber and Cleaned SKU/Product Sku
-        merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', 
-                               left_on=['orderNumber', 'Cleaned SKU'], 
-                               right_on=['Order Number.', 'Product Sku'])
+        # merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', 
+        #                        left_on=['orderNumber', 'Cleaned SKU'], 
+        #                        right_on=['Order Number.', 'Product Sku'])
+
+        # Create a dictionary to map 'Order Number.' to 'Out of Warehouse' using the first occurrence
+        order_warehouse_mapping = (
+            consol_order_report_filtered[['Order Number.', 'Out of Warehouse']]
+            .drop_duplicates('Order Number.')
+            .set_index('Order Number.')
+            .to_dict()['Out of Warehouse']
+        )
+
+        # Map 'Out of Warehouse' to raw_data using the dictionary
+        raw_data['Out of Warehouse'] = raw_data['orderNumber'].map(order_warehouse_mapping)
         
         # Create new column "Qty" based on "sellerSku"
-        merged_data['Qty'] = merged_data['sellerSku'].apply(extract_quantity)
+        raw_data['Qty'] = raw_data['sellerSku'].apply(extract_quantity)
         # merged_data['Qty'] = merged_data['Qty'] * merged_data['Quantity']
 
         # Remove 'x' and any digits after 'x' in sellerSku
-        merged_data['sellerSku'] = merged_data['sellerSku'].apply(clean_sku)
+        raw_data['sellerSku'] = raw_data['sellerSku'].apply(clean_sku)
 
         # Drop rows with duplicate "orderNumber"
         # merged_data = merged_data.drop_duplicates(subset=['orderNumber', 'Cleaned SKU', 'Qty'], keep='first')
@@ -82,18 +93,18 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         for sku_file in sku_files:
             sku_data = pd.read_excel(sku_file)
             # Perform left join with RawData as base DataFrame
-            merged_data['sellerSku'] = merged_data['sellerSku'].astype(str)
+            raw_data['sellerSku'] = raw_data['sellerSku'].astype(str)
             sku_data['BRI MATCODE'] = sku_data['BRI MATCODE'].astype(str)
-            merged_data = pd.merge(merged_data, sku_data, how='left', left_on='sellerSku', right_on='BRI MATCODE')
+            raw_data = pd.merge(raw_data, sku_data, how='left', left_on='sellerSku', right_on='BRI MATCODE')
         
         # Ensure 'orderNumber' is of type str
-        merged_data['orderNumber'] = merged_data['orderNumber'].astype(str)
+        raw_data['orderNumber'] = raw_data['orderNumber'].astype(str)
         
         # Generate filename
         filename = os.path.basename(raw_data_file).replace(".xlsx", "_merged.xlsx")
         # Save merged data
         merged_path = os.path.join(merged_dir, filename)
-        merged_data.to_excel(merged_path, index=False)
+        raw_data.to_excel(merged_path, index=False)
         print(f"Merged data from {os.path.basename(raw_data_file)}, ConsolOrderReport, and SKU and saved to {merged_path}")
 
 # Merge data from different directories
