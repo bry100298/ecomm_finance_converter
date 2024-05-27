@@ -83,7 +83,7 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         raw_data['SKU Reference No.'] = raw_data['SKU Reference No.'].apply(clean_sku)
 
         # Drop rows with duplicate "Order ID"
-        raw_data = raw_data.drop_duplicates(subset=['Order ID', 'Cleaned SKU', 'Qty'], keep='first')
+        # raw_data = raw_data.drop_duplicates(subset=['Order ID', 'Cleaned SKU', 'Qty'], keep='first')
 
         # Get list of .xlsx files in SKU directory
         sku_files = glob.glob(os.path.join(sku_dir, '*.xlsx'))
@@ -143,7 +143,7 @@ def generate_consolidation(input_dir, output_dir):
             'Qty': 'Qty',
             'createTime': 'Order Creation Date',
             'Deal Price': 'SC Unit Price',
-            'Product Name_x': 'Material Description',
+            'Product Name': 'Material Description',
             # 'sellerDiscountTotal': 'Voucher discounts',
             'Order ID': 'ORDER ID',
             'Order Status': 'DELIVERY STATUS',
