@@ -11,16 +11,193 @@ sku_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'SKU')
 consol_order_report_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'ConsolOrderReport')
 merged_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'Merged')
 
+# Define special SKUs
+regular_special_skus = {
+    "PEP001X2+700033_1",
+    "GAT001X6_1",
+    "GATNS1X6_002",
+    "700022x2+700024+700023+700785FG",
+    "700015x2+700023+700021+700785",
+    "MD002_CODMx2+120810_CODM",
+    "120812_CODMx2+MD002_CODM",
+    "120769x12 + 700785",
+    "120767x12 + 700785",
+    "120768x12 + 700785",
+    "120812_CODMx2+MD001_CODM",
+    "120802-05x2",
+    "120804x10_BD",
+    "120803x10_BD",
+    "120805x10_BD",
+    "120802x10_BD",
+    "PCBOX01",
+    "GATNS_002x3+GAT001x3",
+    "MAXVOUCHERFLFG",
+    "700016+120865+120861+700787x2",
+    "XBDORITOSPACK",
+    "700785FGLx2",
+    "701977FGx2",
+    "700787FGLx2",
+    "LPTN_2X",
+    "120835x2+33+34",
+    "NBA-SQUAD120861x2+120891x2",
+    "NBA-DUO120870x2+120862+120897FG",
+    "NBA-FULL120865x2+120891x2+120862+700785FG+702055FG"
+}
+
+# Define SKUs to be cleaned by removing specific substrings
+skus_to_remove = {
+    "CS-KIT",
+    "_ML",
+    "LT_FG",
+    "LT_FG1",
+    "_NBA",
+    "GP-",
+    "ML_",
+    "CBCS",
+    "CSV2",
+    "CSNEW",
+}
+
+# Define specific SKUs with descriptions to remove
+specific_skus_to_clean = {
+    "700029CS": "CS",
+    "700795CS": "CS",
+    "700789CS": "CS",
+    "164200CS": "CS",
+    "120774CS": "CS",
+    "164383CS": "CS",
+    "164379CS": "CS",
+    "162659CS": "CS",
+    "163754CS": "CS",
+    "120690CS": "CS",
+    "164386CS": "CS",
+    "164384CS": "CS",
+    "120798CS": "CS",
+    "164196CS": "CS",
+    "120180CS": "CS",
+    "700785ICECS": "CS",
+    "700022CS2": "CS2",
+    "700067CS": "CS",
+    "700009CS": "CS",
+    "120820CS": "CS",
+    "120807CS": "CS",
+    "163861CS": "CS",
+    "700012CS": "CS",
+    "700014CS": "CS",
+    "120828CS": "CS",
+    "120818CS": "CS",
+    "700788CS": "CS",
+    "700065CS": "CS",
+    "700023CS": "CS",
+    "700008CS": "CS",
+    "700025CS": "CS",
+    "163862CS": "CS",
+    "120861CS": "CS",
+    "164655CS": "CS",
+    "120804CS": "CS",
+    "120857CS": "CS",
+    "120870CS": "CS",
+    "120865CS": "CS",
+    "120840CS": "CS",
+    "120839CS": "CS",
+    "PEP320CS": "CS",
+    "120426CS": "CS",
+    "701976CS": "CS",
+    "700782CS": "CS",
+    "700784CS": "CS",
+    "CS_120818": "CS_",
+    "CS_700023": "CS_",
+    "CS_701681": "CS_",
+    "CS_120857": "CS_",
+    "120890CS": "CS",
+    "702094CS": "CS",
+    "164480CS": "CS",
+    "702095CS": "CS",
+    "164793CS": "CS",
+    "120894CS": "CS",
+    "120892CS": "CS",
+    "702067CS": "CS",
+    "120861CBCSx2": "CBCSx2",
+    "120892CSx2": "CSx2",
+    "163863CS": "CS",
+    "120044_1":"_1",
+    "120809_CODM":"_CODM",
+    "120811_CODM":"_CODM",
+    "120812_CODM":"_CODM",
+    "120828_CODM":"_CODM",
+    "120810_CODM":"_CODM",
+    "700788_CODM":"_CODM",
+    "700785_CODM":"_CODM",
+    "MD002_CODM":"_CODM",
+    "MD001_CODM":"_CODM",
+    "GP_120868":"GP_",
+    "GP_120873":"GP_",
+    "GP-120874":"GP_",
+    "GP_120867":"GP_",
+    "GP_120810":"GP_",
+    "120864CB":"CB",
+    "120870CB":"CB",
+    "120862CB":"CB",
+    "120861CB":"CB",
+    "120865CB":"CB",
+    "LPTN_RED_FG":"_FG"
+}
+
 # Function to extract quantity from Seller SKU
-def extract_quantity(seller_sku):
-    if 'x' in seller_sku:
-        return int(seller_sku.split('x')[1])
-    else:
-        return 1
+# def extract_quantity(seller_sku):
+#     if seller_sku in regular_special_skus:
+#         return 1
+#     # if 'x' in seller_sku:
+#     #     return int(seller_sku.split('x')[1])
+#     if 'x' in seller_sku:
+#         try:
+#             return int(seller_sku.split('x')[1])
+#         except ValueError:
+#             return 1
+#     else:
+#         return 1
+
+# # Function to clean SKU Reference No.
+# def clean_sku(sku):
+#     if sku in regular_special_skus:
+#         return sku
+#     if sku.startswith("STNG_") and "x" in sku:
+#         parts = sku.split("x")
+#         return f"ST_SBRYx{parts[1]}"
+#     return sku.split('x')[0] if 'x' in sku else sku
 
 # Function to clean SKU Reference No.
 def clean_sku(sku):
+    if sku in regular_special_skus:
+        return sku
+    if sku.startswith("STNG_") and "x" in sku:
+        parts = sku.split("x")
+        return f"ST_SBRYx{parts[1]}"
+    if sku in specific_skus_to_clean:
+        return sku.replace(specific_skus_to_clean[sku], "")
+    for remove_str in skus_to_remove:
+        sku = sku.replace(remove_str, "")
     return sku.split('x')[0] if 'x' in sku else sku
+
+# Function to extract quantity from Seller SKU
+def extract_quantity(seller_sku):
+    if seller_sku in regular_special_skus:
+        return 1
+    if 'ST_SBRYx' in seller_sku:
+        try:
+            return int(seller_sku.split('ST_SBRYx')[1])
+        except ValueError:
+            return 1
+    if seller_sku in specific_skus_to_clean:
+        return 1
+    for remove_str in skus_to_remove:
+        seller_sku = seller_sku.replace(remove_str, "")
+    if 'x' in seller_sku:
+        try:
+            return int(seller_sku.split('x')[1])
+        except ValueError:
+            return 1
+    return 1
 
 # Function to merge data from different directories
 def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
@@ -29,19 +206,8 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
     
     # Merge files
     for raw_data_file in raw_data_files:
-        # raw_data = pd.read_excel(raw_data_file)
-
         # Read raw data while skipping the second row (index 1)
         raw_data = pd.read_excel(raw_data_file, skiprows=lambda x: x in [1])
-
-        # Remove the second row (index 1)
-        # raw_data = raw_data.drop(index=1)
-        # raw_data = raw_data.drop(index=1).reset_index(drop=True)
-        # raw_data = raw_data.drop(1).reset_index(drop=True)
-
-
-        # Clean Seller SKU in raw_data
-        raw_data['Cleaned SKU'] = raw_data['Seller SKU'].apply(clean_sku)
 
         # Get list of .xlsx and .xls files in consol order report directory
         consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xlsx'))
@@ -65,14 +231,7 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         raw_data['Order ID'] = raw_data['Order ID'].astype(str)
         consol_order_report_filtered['Order Number.'] = consol_order_report_filtered['Order Number.'].astype(str)
 
-        # Convert 'Product Sku' to string type to match with 'Cleaned SKU'
-        raw_data['Cleaned SKU'] = raw_data['Cleaned SKU'].astype(str)
         consol_order_report_filtered['Product Sku'] = consol_order_report_filtered['Product Sku'].astype(str)
-
-        # Perform left join with RawData as base DataFrame on both Order ID and Cleaned SKU/Product Sku
-        # merged_data = pd.merge(raw_data, consol_order_report_filtered, how='left', 
-        #                        left_on=['Order ID', 'Cleaned SKU'], 
-        #                        right_on=['Order Number.', 'Product Sku'])
 
         order_warehouse_mapping = (
             consol_order_report_filtered[['Order Number.', 'Out of Warehouse']]
@@ -93,9 +252,6 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
 
         # Remove 'x' and any digits after 'x' in Seller SKU
         raw_data['Seller SKU'] = raw_data['Seller SKU'].apply(clean_sku)
-
-        # Drop rows with duplicate "Order ID"
-        # raw_data = raw_data.drop_duplicates(subset=['Order ID', 'Cleaned SKU', 'Qty'], keep='first')
 
         # Get list of .xlsx files in SKU directory
         sku_files = glob.glob(os.path.join(sku_dir, '*.xlsx'))
@@ -166,7 +322,8 @@ def generate_consolidation(input_dir, output_dir):
             'Qty': 'Qty',
             'Created Time': 'Order Creation Date',
             # 'Deal Price': 'SC Unit Price',
-            'Product Name': 'Material Description',
+            # 'Product Name': 'Material Description',
+            'MATERIAL DESCRIPTION': 'Material Description',
             # 'sellerDiscountTotal': 'Voucher discounts',
             'Order ID': 'ORDER ID',
             'Order Status': 'DELIVERY STATUS',
