@@ -356,7 +356,7 @@ generate_consolidation(merged_dir, consolidation_dir)
 def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
     # Find any xlsx files in the input directory
     input_files = glob.glob(os.path.join(consolidation_dir, '*.xlsx'))
-    store_name = 'LAZADA PHILIPPINES (LAZADA FRITOLAY)'
+    store_name = 'LAZADA PHILIPPINES (LAZADA FRITO-LAY)'
 
     for input_file in input_files:
         # Read the Excel file

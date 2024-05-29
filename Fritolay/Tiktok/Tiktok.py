@@ -357,7 +357,7 @@ generate_consolidation(merged_dir, consolidation_dir)
 def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
     # Find any xlsx files in the input directory
     input_files = glob.glob(os.path.join(consolidation_dir, '*.xlsx'))
-    store_name = 'Tiktok Philippines (Tiktok Philippines - PEPSICO)'
+    store_name = 'TIKTOK PHILIPPINES (PEPSICO)'
 
     for input_file in input_files:
         # Read the Excel file
