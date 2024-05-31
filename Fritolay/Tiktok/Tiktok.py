@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import shutil
 import glob
 
 # Define parent directory
@@ -10,6 +11,7 @@ raw_data_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'RawData')
 sku_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'SKU')
 consol_order_report_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'ConsolOrderReport')
 merged_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'Merged')
+archive_merged_dir = os.path.join(parent_dir, 'Tiktok', 'Archive', 'Merged')
 
 # Define special SKUs
 regular_special_skus = {
@@ -348,6 +350,8 @@ def generate_consolidation(input_dir, output_dir):
         output_path = os.path.join(output_dir, filename)
         merge_data.to_excel(output_path, index=False)
         print(f"Consolidation generated and saved to: {output_path}")
+        # Move Excel file to Outbound Folder
+        shutil.move(input_dir, os.path.join(archive_merged_dir, merged_dir))
 
 consolidation_dir = os.path.join(parent_dir, 'Tiktok', 'Outbound', 'Consolidation')
 
