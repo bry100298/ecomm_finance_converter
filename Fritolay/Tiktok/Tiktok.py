@@ -145,6 +145,17 @@ specific_skus_to_clean = {
     "LPTN_RED_FG":"_FG"
 }
 
+specific_sku_clean_KTR = {
+    "120800": "FG",
+    "120825": "_2",
+    "120804": "_2",
+    "120865": "+FG_Snickers51G",
+    "120861": "+FG_MMChocolate",
+    "120870": "+FG_MMPeanut",
+    "702162": "+FG_LPTNTMBLR",
+}
+
+
 # Function to extract quantity from Seller SKU
 # def extract_quantity(seller_sku):
 #     if seller_sku in regular_special_skus:
@@ -170,6 +181,7 @@ specific_skus_to_clean = {
 
 # Function to clean SKU Reference No.
 def clean_sku(sku):
+    sku = str(sku)  # Convert sku to string
     if sku in regular_special_skus:
         return sku
     if sku.startswith("STNG_") and "x" in sku:
@@ -179,10 +191,16 @@ def clean_sku(sku):
         return sku.replace(specific_skus_to_clean[sku], "")
     for remove_str in skus_to_remove:
         sku = sku.replace(remove_str, "")
+    for sku_key in specific_sku_clean_KTR:
+        if sku.startswith(sku_key):
+            sku = sku.split('x')[0]  # Keep only the part before 'x'
+            break
     return sku.split('x')[0] if 'x' in sku else sku
+
 
 # Function to extract quantity from Seller SKU
 def extract_quantity(seller_sku):
+    seller_sku = str(seller_sku)  # Convert sku to string
     if seller_sku in regular_special_skus:
         return 1
     if 'ST_SBRYx' in seller_sku:
@@ -196,10 +214,19 @@ def extract_quantity(seller_sku):
         seller_sku = seller_sku.replace(remove_str, "")
     if 'x' in seller_sku:
         try:
-            return int(seller_sku.split('x')[1])
+            quantity_part = seller_sku.split('x')[1]
+            # Keep only the numeric part of quantity_part
+            quantity_part = ''.join(char for char in quantity_part if char.isdigit())
+            return int(quantity_part)
         except ValueError:
             return 1
     return 1
+    # if 'x' in seller_sku:
+    #     try:
+    #         return int(seller_sku.split('x')[1])
+    #     except ValueError:
+    #         return 1
+    # return 1
 
 # Function to merge data from different directories
 def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
