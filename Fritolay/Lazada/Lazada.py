@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import shutil
 import glob
 
 # store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
@@ -12,6 +13,7 @@ raw_data_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'RawData')
 sku_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'SKU')
 consol_order_report_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'ConsolOrderReport')
 merged_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'Merged')
+archive_merged_dir = os.path.join(parent_dir, 'Tiktok', 'Archive', 'Merged')
 
 # Define special SKUs
 regular_special_skus = {
@@ -347,7 +349,8 @@ def generate_consolidation(input_dir, output_dir):
         output_path = os.path.join(output_dir, filename)
         merge_data.to_excel(output_path, index=False)
         print(f"Consolidation generated and saved to: {output_path}")
-
+        # Move Merged Excel file to Archive Merged Folder
+        shutil.move(input_file, os.path.join(archive_merged_dir, os.path.basename(input_file)))
 consolidation_dir = os.path.join(parent_dir, 'Lazada', 'Outbound', 'Consolidation')
 
 # Call the function
