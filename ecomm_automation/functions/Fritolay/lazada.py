@@ -14,6 +14,7 @@ sku_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'SKU')
 consol_order_report_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'ConsolOrderReport')
 merged_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'Merged')
 archive_merged_dir = os.path.join(parent_dir, 'Lazada', 'Archive', 'Merged')
+archive_raw_dir = os.path.join(parent_dir, 'Lazada', 'Archive', 'RawData')
 
 # Define special SKUs
 regular_special_skus = {
@@ -286,6 +287,7 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         # Save merged data
         merged_path = os.path.join(merged_dir, filename)
         raw_data.to_excel(merged_path, index=False)
+        shutil.move(raw_data_file, os.path.join(archive_raw_dir, os.path.basename(raw_data_file)))
         print(f"Merged data from {os.path.basename(raw_data_file)}, ConsolOrderReport, and SKU and saved to {merged_path}")
 
 # Merge data from different directories
