@@ -37,27 +37,29 @@ class MainWindow(QMainWindow):
         sidebar_layout = QVBoxLayout()
         sidebar_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
 
-        upload_label = QLabel("Upload", self)
-        upload_label.setAlignment(Qt.AlignLeft)
-        upload_label.setStyleSheet("background-color: white; color: black; font-size: 16px; padding: 10px;")
-        sidebar_layout.addWidget(upload_label)
+        # upload_label = QLabel("Upload", self)
+        # upload_label.setAlignment(Qt.AlignLeft)
+        # upload_label.setStyleSheet("background-color: white; color: black; font-size: 16px; padding: 10px;")
+        # sidebar_layout.addWidget(upload_label)
 
-        discover_label = QLabel("Discover", self)
-        discover_label.setAlignment(Qt.AlignLeft)
-        discover_label.setStyleSheet("background-color: white; color: black; font-size: 16px; padding: 10px;")
-        sidebar_layout.addWidget(discover_label)
+        # discover_label = QLabel("Discover", self)
+        # discover_label.setAlignment(Qt.AlignLeft)
+        # discover_label.setStyleSheet("background-color: white; color: black; font-size: 16px; padding: 10px;")
+        # sidebar_layout.addWidget(discover_label)
 
-        buttons = [("Raw Data", "raw_data_icon.png"), ("SKU", "sku_icon.png"), ("Orders Report", "orders_report_icon.png")]
+        buttons = [("Home", "home.png"), ("Raw Data", "raw_data_icon.png"), ("SKU", "sku_icon.png"), ("Orders Report", "orders_report_icon.png")]
         self.sidebar_buttons = []
         for button_text, icon_file in buttons:
             btn = QPushButton(button_text)
             # btn.setIcon(QIcon(os.path.join("/mnt/data/", icon_file)))
+            btn.setIcon(QIcon(os.path.join(frame0, icon_file)))
             # btn.setIconSize(QSize(24, 24))
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             btn.setFixedHeight(50)
+            # background-color: #f0f0f0; 
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #f0f0f0; 
+                    background-color: #FFFFFF; 
                     padding: 10px; 
                     border: none;
                     text-align: left;
@@ -145,12 +147,12 @@ class MainWindow(QMainWindow):
         # Adjust background image stacking order
         background_label.lower()
         central_widget.raise_()
-
+        # background-color: #f0f0f0; 
     def highlight_button(self, button):
         for btn in self.sidebar_buttons:
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: #f0f0f0; 
+                    background-color: #FFFFFF; 
                     padding: 10px; 
                     border: none;
                     text-align: left;
