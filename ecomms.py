@@ -15,9 +15,12 @@ class MainWindow(QMainWindow):
 
         # Define parent directory
         parent_dir = 'ecomm_automation'
+        # parent_dir = 'ecomm_finance_converter'
 
         # Define subdirectories
         frame0 = os.path.join(parent_dir, 'assets', 'frame0')
+        fritolay = os.path.join(parent_dir, 'functions', 'Fritolay')
+        glico = os.path.join(parent_dir, 'functions', 'Glico')
 
         # Load and display the background image
         background_label = QLabel(self)
