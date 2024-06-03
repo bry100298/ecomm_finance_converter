@@ -27,6 +27,8 @@ class MainWindow(QMainWindow):
         self.progress_dialog.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog.setAutoClose(True)
         self.progress_dialog.setValue(0)
+        self.progress_dialog.setWindowTitle("ECOMM")
+        self.progress_dialog.setWindowIcon(self.windowIcon())
 
         self.completed_scripts = 0
         self.threads = []
@@ -56,6 +58,9 @@ class MainWindow(QMainWindow):
 
         # Define parent directory
         parent_dir = 'ecomm_automation'
+        # Load and set the window icon
+        icon_path = os.path.join(parent_dir, 'assets', 'benbytree_icon.ico')
+        self.setWindowIcon(QIcon(icon_path))
 
         # Define subdirectories
         frame0 = os.path.join(parent_dir, 'assets', 'frame0')
@@ -79,6 +84,7 @@ class MainWindow(QMainWindow):
         # Create a sidebar with sections and buttons
         sidebar_layout = QVBoxLayout()
         sidebar_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
+        sidebar_layout.setSpacing(0)  # Set spacing to zero
 
         buttons = [("Home", "home.png"), ("Raw Data", "raw_data_icon.png"), ("SKU", "sku_icon.png"), ("Orders Report", "orders_report_icon.png")]
         self.sidebar_buttons = []
@@ -111,7 +117,7 @@ class MainWindow(QMainWindow):
         sidebar_widget.setLayout(sidebar_layout)
         sidebar_widget.setFixedWidth(195)
         sidebar_widget.setStyleSheet("background-color: white; border-right: 2px solid #ccc;")
-        sidebar_widget.setGeometry(0, 71, 195, 409)  # Positioned below the header and above the footer
+        # sidebar_widget.setGeometry(0, 71, 195, 409)  # Positioned below the header and above the footer
 
         # Create the main content area
         main_content_layout = QVBoxLayout()
@@ -155,6 +161,8 @@ class MainWindow(QMainWindow):
 
         # Combine sidebar and main content
         content_layout = QHBoxLayout()
+        content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
+        content_layout.setSpacing(0)  # Set spacing to zero
         content_layout.addWidget(sidebar_widget)
         content_layout.addWidget(main_content_widget)
 
@@ -164,6 +172,7 @@ class MainWindow(QMainWindow):
         # Create the main layout
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
+        main_layout.setSpacing(0)  # Set spacing to zero
         main_layout.addWidget(header)
         main_layout.addWidget(content_widget)
         main_layout.addWidget(footer_widget)
