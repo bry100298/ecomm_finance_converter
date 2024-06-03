@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
 
         # Create a sidebar with sections and buttons
         sidebar_layout = QVBoxLayout()
-        sidebar_layout.setContentsMargins(0, 0, 0, 0)
+        sidebar_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
 
         upload_label = QLabel("Upload", self)
         upload_label.setAlignment(Qt.AlignLeft)
@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
 
         # Create the main content area
         main_content_layout = QVBoxLayout()
-        main_content_layout.setContentsMargins(0, 0, 0, 0)
+        main_content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
 
         main_content_widget = QWidget()
         main_content_widget.setLayout(main_content_layout)
@@ -130,6 +130,7 @@ class MainWindow(QMainWindow):
 
         # Create the main layout
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
         main_layout.addWidget(header)
         main_layout.addWidget(content_widget)
         main_layout.addWidget(footer_widget)
