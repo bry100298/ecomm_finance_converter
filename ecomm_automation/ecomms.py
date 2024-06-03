@@ -78,9 +78,11 @@ class MainWindow(QMainWindow):
             self.sidebar_buttons.append(btn)
 
         sidebar_widget = QWidget()
+        # sidebar_widget.setContentsMargins(0, 0, 0, 0)
         sidebar_widget.setLayout(sidebar_layout)
         sidebar_widget.setFixedWidth(195)
-        sidebar_widget.setStyleSheet("background-color: white; border-right: 1px solid #ccc;")
+        # sidebar_widget.setStyleSheet("background-color: white; border-right: 1px solid #ccc;")
+        sidebar_widget.setStyleSheet("background-color: white; border-right: 2px solid #ccc;")
         sidebar_widget.setGeometry(0, 71, 195, 409)  # Positioned below the header and above the footer
 
         # Create the main content area
@@ -88,11 +90,13 @@ class MainWindow(QMainWindow):
         main_content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
 
         main_content_widget = QWidget()
+        # main_content_widget.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
         main_content_widget.setLayout(main_content_layout)
         main_content_widget.setStyleSheet("background-color: transparent;")
 
         # Create a footer with dropdowns and buttons
         footer_layout = QHBoxLayout()
+        # footer_layout.setContentsMargins(10, 5, 10, 5)
         footer_layout.setContentsMargins(10, 5, 10, 5)
         footer_layout.setSpacing(10)
 
