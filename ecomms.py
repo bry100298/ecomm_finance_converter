@@ -5,22 +5,25 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBo
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
+store = ['Fritolay', 'Glico']
+
 class ScriptRunner(QThread):
     progress = pyqtSignal(int)
 
-    def __init__(self, script, progress_per_script):
+    def __init__(self, store_name, script, progress_per_script):
         super().__init__()
+        self.store_name = store_name
         self.script = script
         self.progress_per_script = progress_per_script
 
     def run(self):
-        subprocess.run(['python', os.path.join('ecomm_automation', 'functions', 'Fritolay', self.script)])
+        subprocess.run(['python', os.path.join('ecomm_automation', 'functions', self.store_name, self.script)])
         self.progress.emit(self.progress_per_script)
 
 class MainWindow(QMainWindow):
     def run_scripts(self):
         scripts = ['Lazada.py', 'Shopee.py', 'Tiktok.py']
-        total_scripts = len(scripts)
+        total_scripts = len(scripts) * len(store)
         progress_per_script = int(100 / total_scripts)
 
         self.progress_dialog = QProgressDialog("Running scripts...", "Cancel", 0, 100, self)
@@ -33,11 +36,12 @@ class MainWindow(QMainWindow):
         self.completed_scripts = 0
         self.threads = []
 
-        for script in scripts:
-            runner = ScriptRunner(script, progress_per_script)
-            runner.progress.connect(self.update_progress)
-            self.threads.append(runner)
-            runner.start()
+        for store_name in store:
+            for script in scripts:
+                runner = ScriptRunner(store_name, script, progress_per_script)
+                runner.progress.connect(self.update_progress)
+                self.threads.append(runner)
+                runner.start()
 
     def update_progress(self, value):
         self.completed_scripts += 1
@@ -58,6 +62,7 @@ class MainWindow(QMainWindow):
 
         # Define parent directory
         parent_dir = 'ecomm_automation'
+        
         # Load and set the window icon
         icon_path = os.path.join(parent_dir, 'assets', 'benbytree_icon.ico')
         self.setWindowIcon(QIcon(icon_path))
