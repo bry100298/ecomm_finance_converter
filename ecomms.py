@@ -1,12 +1,53 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QSizePolicy, QComboBox, QFrame
+import subprocess
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QSizePolicy, QComboBox, QProgressBar, QProgressDialog
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
+
+class ScriptRunner(QThread):
+    progress = pyqtSignal(int)
+
+    def __init__(self, script, progress_per_script):
+        super().__init__()
+        self.script = script
+        self.progress_per_script = progress_per_script
+
+    def run(self):
+        subprocess.run(['python', os.path.join('ecomm_automation', 'functions', 'Fritolay', self.script)])
+        self.progress.emit(self.progress_per_script)
 
 class MainWindow(QMainWindow):
+    def run_scripts(self):
+        scripts = ['Lazada.py', 'Shopee.py', 'Tiktok.py']
+        total_scripts = len(scripts)
+        progress_per_script = int(100 / total_scripts)
+
+        self.progress_dialog = QProgressDialog("Running scripts...", "Cancel", 0, 100, self)
+        self.progress_dialog.setWindowModality(Qt.ApplicationModal)
+        self.progress_dialog.setAutoClose(True)
+        self.progress_dialog.setValue(0)
+
+        self.completed_scripts = 0
+        self.threads = []
+
+        for script in scripts:
+            runner = ScriptRunner(script, progress_per_script)
+            runner.progress.connect(self.update_progress)
+            self.threads.append(runner)
+            runner.start()
+
+    def update_progress(self, value):
+        self.completed_scripts += 1
+        self.progress_dialog.setValue(self.completed_scripts * value)
+
+        if self.completed_scripts == len(self.threads):
+            self.progress_dialog.close()
+
     def __init__(self):
         super(MainWindow, self).__init__()
+
+        self.completed_scripts = 0
 
         # Set window properties
         self.setWindowTitle('ECOMMS AUTOMATION SYSTEM')
@@ -15,7 +56,6 @@ class MainWindow(QMainWindow):
 
         # Define parent directory
         parent_dir = 'ecomm_automation'
-        # parent_dir = 'ecomm_finance_converter'
 
         # Define subdirectories
         frame0 = os.path.join(parent_dir, 'assets', 'frame0')
@@ -40,26 +80,13 @@ class MainWindow(QMainWindow):
         sidebar_layout = QVBoxLayout()
         sidebar_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
 
-        # upload_label = QLabel("Upload", self)
-        # upload_label.setAlignment(Qt.AlignLeft)
-        # upload_label.setStyleSheet("background-color: white; color: black; font-size: 16px; padding: 10px;")
-        # sidebar_layout.addWidget(upload_label)
-
-        # discover_label = QLabel("Discover", self)
-        # discover_label.setAlignment(Qt.AlignLeft)
-        # discover_label.setStyleSheet("background-color: white; color: black; font-size: 16px; padding: 10px;")
-        # sidebar_layout.addWidget(discover_label)
-
         buttons = [("Home", "home.png"), ("Raw Data", "raw_data_icon.png"), ("SKU", "sku_icon.png"), ("Orders Report", "orders_report_icon.png")]
         self.sidebar_buttons = []
         for button_text, icon_file in buttons:
             btn = QPushButton(button_text)
-            # btn.setIcon(QIcon(os.path.join("/mnt/data/", icon_file)))
             btn.setIcon(QIcon(os.path.join(frame0, icon_file)))
-            # btn.setIconSize(QSize(24, 24))
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             btn.setFixedHeight(50)
-            # background-color: #f0f0f0; 
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: #FFFFFF; 
@@ -81,10 +108,8 @@ class MainWindow(QMainWindow):
             self.sidebar_buttons.append(btn)
 
         sidebar_widget = QWidget()
-        # sidebar_widget.setContentsMargins(0, 0, 0, 0)
         sidebar_widget.setLayout(sidebar_layout)
         sidebar_widget.setFixedWidth(195)
-        # sidebar_widget.setStyleSheet("background-color: white; border-right: 1px solid #ccc;")
         sidebar_widget.setStyleSheet("background-color: white; border-right: 2px solid #ccc;")
         sidebar_widget.setGeometry(0, 71, 195, 409)  # Positioned below the header and above the footer
 
@@ -93,13 +118,11 @@ class MainWindow(QMainWindow):
         main_content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
 
         main_content_widget = QWidget()
-        # main_content_widget.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
         main_content_widget.setLayout(main_content_layout)
         main_content_widget.setStyleSheet("background-color: transparent;")
 
         # Create a footer with dropdowns and buttons
         footer_layout = QHBoxLayout()
-        # footer_layout.setContentsMargins(10, 5, 10, 5)
         footer_layout.setContentsMargins(10, 5, 10, 5)
         footer_layout.setSpacing(10)
 
@@ -116,6 +139,7 @@ class MainWindow(QMainWindow):
 
         run_button = QPushButton("Run")
         run_button.setFixedWidth(100)
+        run_button.clicked.connect(self.run_scripts)
 
         footer_layout.addWidget(combo_box1)
         footer_layout.addWidget(combo_box2)
@@ -154,7 +178,7 @@ class MainWindow(QMainWindow):
         # Adjust background image stacking order
         background_label.lower()
         central_widget.raise_()
-        # background-color: #f0f0f0; 
+
     def highlight_button(self, button):
         for btn in self.sidebar_buttons:
             btn.setStyleSheet("""
