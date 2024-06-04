@@ -6,7 +6,7 @@ import glob
 # store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
 
 # Define parent directory
-parent_dir = 'Fritolay'
+parent_dir = 'Glico'
 
 # Define directories
 raw_data_dir = os.path.join(parent_dir, 'Lazada', 'Inbound', 'RawData')

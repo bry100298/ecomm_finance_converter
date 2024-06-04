@@ -1,11 +1,15 @@
 import sys
 import os
 import subprocess
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QSizePolicy, QComboBox, QProgressBar, QProgressDialog
+import pandas as pd
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QSizePolicy, QComboBox, QProgressBar, QProgressDialog, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
+import time
 
 store = ['Fritolay', 'Glico']
+platform = ['Lazada', 'Shopee', 'Tiktok']
+ROW_LIMIT = 999
 
 class ScriptRunner(QThread):
     progress = pyqtSignal(int)
@@ -50,6 +54,68 @@ class MainWindow(QMainWindow):
         if self.completed_scripts == len(self.threads):
             self.progress_dialog.close()
 
+    def extract_files(self):
+        selected_option = self.combo_box1.currentText()
+        if selected_option == "QuickBooks":
+            target_dir = QFileDialog.getExistingDirectory(self, "Select Directory")
+            if not target_dir:
+                return
+
+            for store_name in store:
+                store_dir = os.path.join(target_dir, store_name)
+                os.makedirs(store_dir, exist_ok=True)
+
+                combined_df = pd.DataFrame()
+                for platform_name in platform:
+                    quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
+                    if os.path.exists(quickbooks_dir):
+                        for file_name in os.listdir(quickbooks_dir):
+                            if file_name.endswith('.xlsx'):
+                                file_path = os.path.join(quickbooks_dir, file_name)
+                                df = pd.read_excel(file_path)
+                                combined_df = pd.concat([combined_df, df])
+
+                if not combined_df.empty:
+                    self.split_excel(combined_df, store_dir)
+
+    def split_excel(self, df, output_dir):
+        num_splits = (len(df) + ROW_LIMIT - 1) // ROW_LIMIT  # Calculate the number of splits needed
+
+        for i in range(num_splits):
+            start_row = i * ROW_LIMIT
+            end_row = min(start_row + ROW_LIMIT, len(df))
+            split_df = df.iloc[start_row:end_row]
+
+            timestamp = int(time.time())
+            output_file = os.path.join(output_dir, f'{timestamp}_{i+1}.xlsx')
+            split_df.to_excel(output_file, index=False)
+
+    # def process_store_files(self, store_name, target_folder):
+    #     # input_folder = os.path.join('ecomm_automation', 'functions', store_name, 'Shopee', 'Outbound', 'QuickBooks')
+    #     input_folder = os.path.join(store_name, 'Outbound', 'QuickBooks')
+    #     output_folder = os.path.join(target_folder, store_name, 'QuickBooks')
+    #     os.makedirs(output_folder, exist_ok=True)
+
+    #     for filename in os.listdir(input_folder):
+    #         if filename.endswith('.xlsx'):
+    #             file_path = os.path.join(input_folder, filename)
+    #             self.split_excel_file(file_path, output_folder)
+
+    # def split_excel_file(self, file_path, output_folder):
+    #     df = pd.read_excel(file_path)
+    #     total_rows = len(df)
+    #     chunks = (total_rows // 1000) + 1
+    #     base_filename = os.path.splitext(os.path.basename(file_path))[0]
+
+    #     for i in range(chunks):
+    #         start_row = i * 1000
+    #         end_row = (i + 1) * 1000
+    #         chunk_df = df[start_row:end_row]
+    #         output_file = os.path.join(output_folder, f"{base_filename}_part{i+1}.xlsx")
+    #         chunk_df.to_excel(output_file, index=False)
+
+    #     QMessageBox.information(self, "Success", f"Files extracted and saved to {output_folder}")
+
     def __init__(self):
         super(MainWindow, self).__init__()
 
@@ -62,7 +128,7 @@ class MainWindow(QMainWindow):
 
         # Define parent directory
         parent_dir = 'ecomm_automation'
-        
+
         # Load and set the window icon
         icon_path = os.path.join(parent_dir, 'assets', 'benbytree_icon.ico')
         self.setWindowIcon(QIcon(icon_path))
@@ -137,22 +203,36 @@ class MainWindow(QMainWindow):
         footer_layout.setContentsMargins(10, 5, 10, 5)
         footer_layout.setSpacing(10)
 
-        combo_box1 = QComboBox()
-        combo_box1.addItem("Placeholder 1")
-        combo_box1.setFixedWidth(150)
+        #Comment here
+        # combo_box1 = QComboBox()
+        # combo_box1.addItem("Placeholder 1")
+        # combo_box1.setFixedWidth(150)
+
+        self.combo_box1 = QComboBox()
+        self.combo_box1.addItem("Placeholder 1")
+        self.combo_box1.addItem("Consolidation")
+        self.combo_box1.addItem("QuickBooks")
+        self.combo_box1.setFixedWidth(150)
 
         combo_box2 = QComboBox()
         combo_box2.addItem("Placeholder 2")
         combo_box2.setFixedWidth(150)
 
+        #Comment here
+        # extract_button = QPushButton("Extract")
+        # extract_button.setFixedWidth(100)
+
         extract_button = QPushButton("Extract")
         extract_button.setFixedWidth(100)
+        extract_button.clicked.connect(self.extract_files)
 
         run_button = QPushButton("Run")
         run_button.setFixedWidth(100)
         run_button.clicked.connect(self.run_scripts)
 
-        footer_layout.addWidget(combo_box1)
+        #Comment here
+        # footer_layout.addWidget(combo_box1)
+        footer_layout.addWidget(self.combo_box1)
         footer_layout.addWidget(combo_box2)
         footer_layout.addStretch()
         footer_layout.addWidget(extract_button)

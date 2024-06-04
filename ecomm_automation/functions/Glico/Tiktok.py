@@ -4,7 +4,7 @@ import shutil
 import glob
 
 # Define parent directory
-parent_dir = 'Fritolay'
+parent_dir = 'Glico'
 
 # Define directories
 raw_data_dir = os.path.join(parent_dir, 'Tiktok', 'Inbound', 'RawData')
