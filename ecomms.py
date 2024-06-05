@@ -297,10 +297,18 @@ class MainWindow(QMainWindow):
         self.combo_box1.addItem("Consolidation")
         self.combo_box1.addItem("QuickBooks")
         self.combo_box1.setFixedWidth(150)
+        self.combo_box1.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #6EC8C3;
+                border-radius: 5px;
+                padding: 5px;
+                background-color: #FFFFFF;
+            }
+        """)
 
-        combo_box2 = QComboBox()
-        combo_box2.addItem("Placeholder 2")
-        combo_box2.setFixedWidth(150)
+        # combo_box2 = QComboBox()
+        # combo_box2.addItem("Placeholder 2")
+        # combo_box2.setFixedWidth(150)
 
         #Comment here
         # extract_button = QPushButton("Extract")
@@ -312,16 +320,48 @@ class MainWindow(QMainWindow):
 
         extract_button = QPushButton("Extract")
         extract_button.setFixedWidth(100)
+        extract_button.setStyleSheet("""
+            QPushButton {
+                background-color: #FFFFFF;
+                border: none;
+                color: black;
+                padding: 5px;
+                border-radius: 5px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #d0bfff;
+            }
+            QPushButton:pressed {
+                background-color: #b5b69c;
+            }
+        """)
         extract_button.clicked.connect(self.handle_extract)
 
         run_button = QPushButton("Run")
         run_button.setFixedWidth(100)
+        run_button.setStyleSheet("""
+            QPushButton {
+                background-color: #FFFFFF;
+                border: none;
+                color: black;
+                padding: 5px;
+                border-radius: 5px;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #d0bfff;
+            }
+            QPushButton:pressed {
+                background-color: #b5b69c;
+            }
+        """)
         run_button.clicked.connect(self.run_scripts)
 
         #Comment here
         # footer_layout.addWidget(combo_box1)
         footer_layout.addWidget(self.combo_box1)
-        footer_layout.addWidget(combo_box2)
+        # footer_layout.addWidget(combo_box2)
         footer_layout.addStretch()
         footer_layout.addWidget(extract_button)
         footer_layout.addWidget(run_button)
