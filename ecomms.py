@@ -4,7 +4,7 @@ import subprocess
 import pandas as pd
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QSizePolicy, QComboBox, QProgressBar, QProgressDialog, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QMetaObject, Q_ARG
 import time
 
 store = ['Fritolay', 'Glico']
@@ -61,11 +61,30 @@ class MainWindow(QMainWindow):
             if not target_dir:
                 return
 
+            self.progress_dialog = QProgressDialog("Extracting files...", "Cancel", 0, 100, self)
+            self.progress_dialog.setWindowModality(Qt.ApplicationModal)
+            self.progress_dialog.setAutoClose(True)
+            self.progress_dialog.setValue(0)
+            self.progress_dialog.setWindowTitle("ECOMM")
+            self.progress_dialog.setWindowIcon(self.windowIcon())
+            self.progress_dialog.show()
+
+            total_tasks = 0
+            for store_name in store:
+                for platform_name in platform:
+                    quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
+                    if os.path.exists(quickbooks_dir):
+                        for file_name in os.listdir(quickbooks_dir):
+                            if file_name.endswith('.xlsx'):
+                                df = pd.read_excel(os.path.join(quickbooks_dir, file_name))
+                                total_tasks += (len(df) + ROW_LIMIT - 1) // ROW_LIMIT
+
+            self.completed_tasks = 0
+
             for store_name in store:
                 store_dir = os.path.join(target_dir, store_name)
                 os.makedirs(store_dir, exist_ok=True)
 
-                combined_df = pd.DataFrame()
                 for platform_name in platform:
                     quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
                     if os.path.exists(quickbooks_dir):
@@ -73,12 +92,18 @@ class MainWindow(QMainWindow):
                             if file_name.endswith('.xlsx'):
                                 file_path = os.path.join(quickbooks_dir, file_name)
                                 df = pd.read_excel(file_path)
-                                combined_df = pd.concat([combined_df, df])
+                                self.split_excel(df, store_dir, total_tasks)
 
-                if not combined_df.empty:
-                    self.split_excel(combined_df, store_dir)
+            self.progress_dialog.close()
 
-    def split_excel(self, df, output_dir):
+    def update_extract_progress(self, total_tasks, num_rows):
+        progress_per_task = 100 / total_tasks
+        self.completed_tasks += (num_rows + ROW_LIMIT - 1) // ROW_LIMIT
+        progress = self.completed_tasks * progress_per_task
+        self.progress_dialog.setValue(int(progress))
+        QApplication.processEvents()
+
+    def split_excel(self, df, output_dir, total_tasks):
         num_splits = (len(df) + ROW_LIMIT - 1) // ROW_LIMIT  # Calculate the number of splits needed
 
         for i in range(num_splits):
@@ -89,6 +114,8 @@ class MainWindow(QMainWindow):
             timestamp = int(time.time())
             output_file = os.path.join(output_dir, f'{timestamp}_{i+1}.xlsx')
             split_df.to_excel(output_file, index=False)
+
+            self.update_extract_progress(total_tasks, end_row - start_row)
 
     # def process_store_files(self, store_name, target_folder):
     #     # input_folder = os.path.join('ecomm_automation', 'functions', store_name, 'Shopee', 'Outbound', 'QuickBooks')
@@ -128,7 +155,7 @@ class MainWindow(QMainWindow):
 
         # Define parent directory
         parent_dir = 'ecomm_automation'
-
+        
         # Load and set the window icon
         icon_path = os.path.join(parent_dir, 'assets', 'benbytree_icon.ico')
         self.setWindowIcon(QIcon(icon_path))
@@ -209,7 +236,7 @@ class MainWindow(QMainWindow):
         # combo_box1.setFixedWidth(150)
 
         self.combo_box1 = QComboBox()
-        self.combo_box1.addItem("Placeholder 1")
+        self.combo_box1.addItem("Please select extraction")
         self.combo_box1.addItem("Consolidation")
         self.combo_box1.addItem("QuickBooks")
         self.combo_box1.setFixedWidth(150)
