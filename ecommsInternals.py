@@ -7,16 +7,6 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QMetaObject, Q_ARG
 import time
 
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
-
 store = ['Fritolay', 'Glico']
 platform = ['Lazada', 'Shopee', 'Tiktok']
 ROW_LIMIT = 999
@@ -31,9 +21,7 @@ class ScriptRunner(QThread):
         self.progress_per_script = progress_per_script
 
     def run(self):
-        script_path = resource_path(os.path.join('ecomm_automation', 'functions', self.store_name, self.script))
-        subprocess.run(['python', script_path])
-        # subprocess.run(['python', os.path.join('ecomm_automation', 'functions', self.store_name, self.script)])
+        subprocess.run(['python', os.path.join('_internal', 'ecomm_automation', 'functions', self.store_name, self.script)])
         self.progress.emit(self.progress_per_script)
 
 class MainWindow(QMainWindow):
@@ -226,19 +214,17 @@ class MainWindow(QMainWindow):
         parent_dir = 'ecomm_automation'
         
         # Load and set the window icon
-        # icon_path = os.path.join(parent_dir, 'assets', 'benbytree_icon.ico')
-        icon_path = resource_path(os.path.join(parent_dir, 'assets', 'benbytree_icon.ico'))
+        icon_path = os.path.join('_internal', parent_dir, 'assets', 'benbytree_icon.ico')
         self.setWindowIcon(QIcon(icon_path))
 
         # Define subdirectories
-        frame0 = os.path.join(parent_dir, 'assets', 'frame0')
-        fritolay = os.path.join(parent_dir, 'functions', 'Fritolay')
-        glico = os.path.join(parent_dir, 'functions', 'Glico')
+        frame0 = os.path.join('_internal', parent_dir, 'assets', 'frame0')
+        fritolay = os.path.join('_internal', parent_dir, 'functions', 'Fritolay')
+        glico = os.path.join('_internal', parent_dir, 'functions', 'Glico')
 
         # Load and display the background image
         background_label = QLabel(self)
-        # pixmap = QPixmap(os.path.join(frame0, "image_1.png"))
-        pixmap = QPixmap(resource_path(os.path.join(frame0, "image_1.png")))
+        pixmap = QPixmap(os.path.join(frame0, "image_1.png"))
         background_label.setPixmap(pixmap)
         background_label.setScaledContents(True)
         background_label.setGeometry(0, 0, 750, 550)
@@ -259,8 +245,7 @@ class MainWindow(QMainWindow):
         self.sidebar_buttons = []
         for button_text, icon_file in buttons:
             btn = QPushButton(button_text)
-            btn.setIcon(QIcon(resource_path(os.path.join(frame0, icon_file))))
-            # btn.setIcon(QIcon(os.path.join(frame0, icon_file)))
+            btn.setIcon(QIcon(os.path.join(frame0, icon_file)))
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             btn.setFixedHeight(50)
             btn.setStyleSheet("""

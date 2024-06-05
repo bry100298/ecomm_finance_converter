@@ -33,7 +33,6 @@ class ScriptRunner(QThread):
     def run(self):
         script_path = resource_path(os.path.join('ecomm_automation', 'functions', self.store_name, self.script))
         subprocess.run(['python', script_path])
-        # subprocess.run(['python', os.path.join('ecomm_automation', 'functions', self.store_name, self.script)])
         self.progress.emit(self.progress_per_script)
 
 class MainWindow(QMainWindow):
@@ -89,7 +88,7 @@ class MainWindow(QMainWindow):
         total_tasks = 0
         for store_name in store:
             for platform_name in platform:
-                quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
+                quickbooks_dir = resource_path(os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks'))
                 if os.path.exists(quickbooks_dir):
                     for file_name in os.listdir(quickbooks_dir):
                         if file_name.endswith('.xlsx'):
@@ -103,7 +102,7 @@ class MainWindow(QMainWindow):
             os.makedirs(store_dir, exist_ok=True)
 
             for platform_name in platform:
-                quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
+                quickbooks_dir = resource_path(os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks'))
                 if os.path.exists(quickbooks_dir):
                     for file_name in os.listdir(quickbooks_dir):
                         if file_name.endswith('.xlsx'):
@@ -134,32 +133,6 @@ class MainWindow(QMainWindow):
 
             self.update_quickbooks_progress(total_tasks, end_row - start_row)
 
-    # def process_store_files(self, store_name, target_folder):
-    #     # input_folder = os.path.join('ecomm_automation', 'functions', store_name, 'Shopee', 'Outbound', 'QuickBooks')
-    #     input_folder = os.path.join(store_name, 'Outbound', 'QuickBooks')
-    #     output_folder = os.path.join(target_folder, store_name, 'QuickBooks')
-    #     os.makedirs(output_folder, exist_ok=True)
-
-    #     for filename in os.listdir(input_folder):
-    #         if filename.endswith('.xlsx'):
-    #             file_path = os.path.join(input_folder, filename)
-    #             self.split_excel_file(file_path, output_folder)
-
-    # def split_excel_file(self, file_path, output_folder):
-    #     df = pd.read_excel(file_path)
-    #     total_rows = len(df)
-    #     chunks = (total_rows // 1000) + 1
-    #     base_filename = os.path.splitext(os.path.basename(file_path))[0]
-
-    #     for i in range(chunks):
-    #         start_row = i * 1000
-    #         end_row = (i + 1) * 1000
-    #         chunk_df = df[start_row:end_row]
-    #         output_file = os.path.join(output_folder, f"{base_filename}_part{i+1}.xlsx")
-    #         chunk_df.to_excel(output_file, index=False)
-
-    #     QMessageBox.information(self, "Success", f"Files extracted and saved to {output_folder}")
-
     def extract_consolidation_files(self):
         target_dir = QFileDialog.getExistingDirectory(self, "Select Directory")
         if not target_dir:
@@ -176,7 +149,7 @@ class MainWindow(QMainWindow):
         total_files = 0
         for store_name in store:
             for platform_name in platform:
-                consolidation_dir = os.path.join(store_name, platform_name, 'Outbound', 'Consolidation')
+                consolidation_dir = resource_path(os.path.join(store_name, platform_name, 'Outbound', 'Consolidation'))
                 if os.path.exists(consolidation_dir):
                     total_files += len([file for file in os.listdir(consolidation_dir) if file.endswith('.xlsx')])
 
@@ -190,7 +163,7 @@ class MainWindow(QMainWindow):
 
             for platform_name in platform:
                 platform_data = pd.DataFrame()
-                consolidation_dir = os.path.join(store_name, platform_name, 'Outbound', 'Consolidation')
+                consolidation_dir = resource_path(os.path.join(store_name, platform_name, 'Outbound', 'Consolidation'))
                 if os.path.exists(consolidation_dir):
                     for file_name in os.listdir(consolidation_dir):
                         if file_name.endswith('.xlsx'):
@@ -226,18 +199,16 @@ class MainWindow(QMainWindow):
         parent_dir = 'ecomm_automation'
         
         # Load and set the window icon
-        # icon_path = os.path.join(parent_dir, 'assets', 'benbytree_icon.ico')
         icon_path = resource_path(os.path.join(parent_dir, 'assets', 'benbytree_icon.ico'))
         self.setWindowIcon(QIcon(icon_path))
 
         # Define subdirectories
-        frame0 = os.path.join(parent_dir, 'assets', 'frame0')
-        fritolay = os.path.join(parent_dir, 'functions', 'Fritolay')
-        glico = os.path.join(parent_dir, 'functions', 'Glico')
+        frame0 = resource_path(os.path.join(parent_dir, 'assets', 'frame0'))
+        fritolay = resource_path(os.path.join(parent_dir, 'functions', 'Fritolay'))
+        glico = resource_path(os.path.join(parent_dir, 'functions', 'Glico'))
 
         # Load and display the background image
         background_label = QLabel(self)
-        # pixmap = QPixmap(os.path.join(frame0, "image_1.png"))
         pixmap = QPixmap(resource_path(os.path.join(frame0, "image_1.png")))
         background_label.setPixmap(pixmap)
         background_label.setScaledContents(True)
@@ -260,7 +231,6 @@ class MainWindow(QMainWindow):
         for button_text, icon_file in buttons:
             btn = QPushButton(button_text)
             btn.setIcon(QIcon(resource_path(os.path.join(frame0, icon_file))))
-            # btn.setIcon(QIcon(os.path.join(frame0, icon_file)))
             btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
             btn.setFixedHeight(50)
             btn.setStyleSheet("""
@@ -321,18 +291,6 @@ class MainWindow(QMainWindow):
             }
         """)
 
-        # combo_box2 = QComboBox()
-        # combo_box2.addItem("Placeholder 2")
-        # combo_box2.setFixedWidth(150)
-
-        #Comment here
-        # extract_button = QPushButton("Extract")
-        # extract_button.setFixedWidth(100)
-
-        # extract_button = QPushButton("Extract")
-        # extract_button.setFixedWidth(100)
-        # extract_button.clicked.connect(self.extract_quickbooks_files)
-
         extract_button = QPushButton("Extract")
         extract_button.setFixedWidth(100)
         extract_button.setStyleSheet("""
@@ -373,10 +331,7 @@ class MainWindow(QMainWindow):
         """)
         run_button.clicked.connect(self.run_scripts)
 
-        #Comment here
-        # footer_layout.addWidget(combo_box1)
         footer_layout.addWidget(self.combo_box1)
-        # footer_layout.addWidget(combo_box2)
         footer_layout.addStretch()
         footer_layout.addWidget(extract_button)
         footer_layout.addWidget(run_button)
