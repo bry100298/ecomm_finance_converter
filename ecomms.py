@@ -43,60 +43,65 @@ class MainWindow(QMainWindow):
         for store_name in store:
             for script in scripts:
                 runner = ScriptRunner(store_name, script, progress_per_script)
-                runner.progress.connect(self.update_progress)
+                runner.progress.connect(self.update_run_progress)
                 self.threads.append(runner)
                 runner.start()
 
-    def update_progress(self, value):
+    def update_run_progress(self, value):
         self.completed_scripts += 1
         self.progress_dialog.setValue(self.completed_scripts * value)
 
         if self.completed_scripts == len(self.threads):
             self.progress_dialog.close()
 
-    def extract_files(self):
+    def handle_extract(self):
         selected_option = self.combo_box1.currentText()
         if selected_option == "QuickBooks":
-            target_dir = QFileDialog.getExistingDirectory(self, "Select Directory")
-            if not target_dir:
-                return
+            self.extract_quickbooks_files()
+        elif selected_option == "Consolidation":
+            self.extract_consolidation_files()
 
-            self.progress_dialog = QProgressDialog("Extracting files...", "Cancel", 0, 100, self)
-            self.progress_dialog.setWindowModality(Qt.ApplicationModal)
-            self.progress_dialog.setAutoClose(True)
-            self.progress_dialog.setValue(0)
-            self.progress_dialog.setWindowTitle("ECOMM")
-            self.progress_dialog.setWindowIcon(self.windowIcon())
-            self.progress_dialog.show()
+    def extract_quickbooks_files(self):
+        target_dir = QFileDialog.getExistingDirectory(self, "Select Directory")
+        if not target_dir:
+            return
 
-            total_tasks = 0
-            for store_name in store:
-                for platform_name in platform:
-                    quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
-                    if os.path.exists(quickbooks_dir):
-                        for file_name in os.listdir(quickbooks_dir):
-                            if file_name.endswith('.xlsx'):
-                                df = pd.read_excel(os.path.join(quickbooks_dir, file_name))
-                                total_tasks += (len(df) + ROW_LIMIT - 1) // ROW_LIMIT
+        self.progress_dialog = QProgressDialog("Extracting files...", "Cancel", 0, 100, self)
+        self.progress_dialog.setWindowModality(Qt.ApplicationModal)
+        self.progress_dialog.setAutoClose(True)
+        self.progress_dialog.setValue(0)
+        self.progress_dialog.setWindowTitle("ECOMM")
+        self.progress_dialog.setWindowIcon(self.windowIcon())
+        self.progress_dialog.show()
 
-            self.completed_tasks = 0
+        total_tasks = 0
+        for store_name in store:
+            for platform_name in platform:
+                quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
+                if os.path.exists(quickbooks_dir):
+                    for file_name in os.listdir(quickbooks_dir):
+                        if file_name.endswith('.xlsx'):
+                            df = pd.read_excel(os.path.join(quickbooks_dir, file_name))
+                            total_tasks += (len(df) + ROW_LIMIT - 1) // ROW_LIMIT
 
-            for store_name in store:
-                store_dir = os.path.join(target_dir, store_name)
-                os.makedirs(store_dir, exist_ok=True)
+        self.completed_tasks = 0
 
-                for platform_name in platform:
-                    quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
-                    if os.path.exists(quickbooks_dir):
-                        for file_name in os.listdir(quickbooks_dir):
-                            if file_name.endswith('.xlsx'):
-                                file_path = os.path.join(quickbooks_dir, file_name)
-                                df = pd.read_excel(file_path)
-                                self.split_excel(df, store_dir, total_tasks)
+        for store_name in store:
+            store_dir = os.path.join(target_dir, store_name)
+            os.makedirs(store_dir, exist_ok=True)
 
-            self.progress_dialog.close()
+            for platform_name in platform:
+                quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
+                if os.path.exists(quickbooks_dir):
+                    for file_name in os.listdir(quickbooks_dir):
+                        if file_name.endswith('.xlsx'):
+                            file_path = os.path.join(quickbooks_dir, file_name)
+                            df = pd.read_excel(file_path)
+                            self.split_excel(df, store_dir, total_tasks)
 
-    def update_extract_progress(self, total_tasks, num_rows):
+        self.progress_dialog.close()
+
+    def update_quickbooks_progress(self, total_tasks, num_rows):
         progress_per_task = 100 / total_tasks
         self.completed_tasks += (num_rows + ROW_LIMIT - 1) // ROW_LIMIT
         progress = self.completed_tasks * progress_per_task
@@ -115,7 +120,7 @@ class MainWindow(QMainWindow):
             output_file = os.path.join(output_dir, f'{timestamp}_{i+1}.xlsx')
             split_df.to_excel(output_file, index=False)
 
-            self.update_extract_progress(total_tasks, end_row - start_row)
+            self.update_quickbooks_progress(total_tasks, end_row - start_row)
 
     # def process_store_files(self, store_name, target_folder):
     #     # input_folder = os.path.join('ecomm_automation', 'functions', store_name, 'Shopee', 'Outbound', 'QuickBooks')
@@ -142,6 +147,58 @@ class MainWindow(QMainWindow):
     #         chunk_df.to_excel(output_file, index=False)
 
     #     QMessageBox.information(self, "Success", f"Files extracted and saved to {output_folder}")
+
+    def extract_consolidation_files(self):
+        target_dir = QFileDialog.getExistingDirectory(self, "Select Directory")
+        if not target_dir:
+            return
+
+        self.progress_dialog = QProgressDialog("Extracting files...", "Cancel", 0, 100, self)
+        self.progress_dialog.setWindowModality(Qt.ApplicationModal)
+        self.progress_dialog.setAutoClose(True)
+        self.progress_dialog.setValue(0)
+        self.progress_dialog.setWindowTitle("ECOMM")
+        self.progress_dialog.setWindowIcon(self.windowIcon())
+        self.progress_dialog.show()
+
+        total_files = 0
+        for store_name in store:
+            for platform_name in platform:
+                consolidation_dir = os.path.join(store_name, platform_name, 'Outbound', 'Consolidation')
+                if os.path.exists(consolidation_dir):
+                    total_files += len([file for file in os.listdir(consolidation_dir) if file.endswith('.xlsx')])
+
+        self.completed_tasks = 0
+
+        for store_name in store:
+            store_dir = os.path.join(target_dir, store_name)
+            os.makedirs(store_dir, exist_ok=True)
+
+            writer = pd.ExcelWriter(os.path.join(store_dir, 'consolidation.xlsx'), engine='xlsxwriter')
+
+            for platform_name in platform:
+                platform_data = pd.DataFrame()
+                consolidation_dir = os.path.join(store_name, platform_name, 'Outbound', 'Consolidation')
+                if os.path.exists(consolidation_dir):
+                    for file_name in os.listdir(consolidation_dir):
+                        if file_name.endswith('.xlsx'):
+                            file_path = os.path.join(consolidation_dir, file_name)
+                            df = pd.read_excel(file_path)
+                            platform_data = pd.concat([platform_data, df])
+                            self.update_consolidation_progress(total_files)
+
+                platform_data.to_excel(writer, sheet_name=platform_name, index=False)
+
+            writer.close()
+
+        self.progress_dialog.close()
+
+    def update_consolidation_progress(self, total_files):
+        progress_per_task = 100 / total_files
+        self.completed_tasks += 1
+        progress = self.completed_tasks * progress_per_task
+        self.progress_dialog.setValue(int(progress))
+        QApplication.processEvents()
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -249,9 +306,13 @@ class MainWindow(QMainWindow):
         # extract_button = QPushButton("Extract")
         # extract_button.setFixedWidth(100)
 
+        # extract_button = QPushButton("Extract")
+        # extract_button.setFixedWidth(100)
+        # extract_button.clicked.connect(self.extract_quickbooks_files)
+
         extract_button = QPushButton("Extract")
         extract_button.setFixedWidth(100)
-        extract_button.clicked.connect(self.extract_files)
+        extract_button.clicked.connect(self.handle_extract)
 
         run_button = QPushButton("Run")
         run_button.setFixedWidth(100)
