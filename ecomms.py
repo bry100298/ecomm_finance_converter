@@ -30,10 +30,20 @@ class ScriptRunner(QThread):
         self.script = script
         self.progress_per_script = progress_per_script
 
+    # def run(self):
+    #     script_path = resource_path(os.path.join('ecomm_automation', 'functions', self.store_name, self.script))
+    #     subprocess.run(['python', script_path])
+    #     # subprocess.run(['python', os.path.join('ecomm_automation', 'functions', self.store_name, self.script)])
+    #     self.progress.emit(self.progress_per_script)
+
     def run(self):
         script_path = resource_path(os.path.join('ecomm_automation', 'functions', self.store_name, self.script))
-        subprocess.run(['python', script_path])
-        # subprocess.run(['python', os.path.join('ecomm_automation', 'functions', self.store_name, self.script)])
+        if os.name == 'nt':  # Check if the OS is Windows
+            # Use CREATE_NO_WINDOW on Windows to avoid showing the console window
+            subprocess.run(['python', script_path], creationflags=subprocess.CREATE_NO_WINDOW)
+        else:
+            # On other platforms, redirect the output to avoid showing the console window
+            subprocess.run(['python', script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.progress.emit(self.progress_per_script)
 
 class MainWindow(QMainWindow):
