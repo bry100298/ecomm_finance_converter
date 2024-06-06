@@ -39,6 +39,7 @@ class ScriptRunner(QThread):
 class MainWindow(QMainWindow):
     def run_scripts(self):
         scripts = ['Lazada.py', 'Shopee.py', 'Tiktok.py']
+        # scripts = ['Lazada.pyw', 'Shopee.pyw', 'Tiktok.pyw']
         total_scripts = len(scripts) * len(store)
         progress_per_script = int(100 / total_scripts)
 
