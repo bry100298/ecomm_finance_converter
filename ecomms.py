@@ -40,15 +40,22 @@ class ScriptRunner(QThread):
         script_path = resource_path(os.path.join('ecomm_automation', 'functions', self.store_name, self.script))
         if os.name == 'nt':  # Check if the OS is Windows
             # Use CREATE_NO_WINDOW on Windows to avoid showing the console window
-            subprocess.run(['python', script_path], creationflags=subprocess.CREATE_NO_WINDOW)
+            # uncomment this if you will use .py
+            # subprocess.run(['python', script_path], creationflags=subprocess.CREATE_NO_WINDOW)
+            # this will use .exe
+            subprocess.run([script_path], creationflags=subprocess.CREATE_NO_WINDOW)
         else:
             # On other platforms, redirect the output to avoid showing the console window
-            subprocess.run(['python', script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # uncomment this if you will use .py
+            # subprocess.run(['python', script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # this will use .exe
+            subprocess.run([script_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.progress.emit(self.progress_per_script)
 
 class MainWindow(QMainWindow):
     def run_scripts(self):
-        scripts = ['Lazada.py', 'Shopee.py', 'Tiktok.py']
+        scripts = ['Lazada.exe', 'Shopee.exe', 'Tiktok.exe']
+        # scripts = ['Lazada.py', 'Shopee.py', 'Tiktok.py']
         # scripts = ['Lazada.pyw', 'Shopee.pyw', 'Tiktok.pyw']
         total_scripts = len(scripts) * len(store)
         progress_per_script = int(100 / total_scripts)
