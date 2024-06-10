@@ -219,8 +219,12 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
         raw_data['Cleaned SKU'] = raw_data['sellerSku'].apply(clean_sku)
 
         # Get list of .xlsx and .xls files in consol order report directory
-        consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xlsx'))
-        consol_order_report_files += glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
+        # consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xlsx'))
+        # consol_order_report_files += glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
+        
+        # Get list of .xlsx and .xls files in consol order report directory
+        consol_order_report_files = glob.glob(os.path.join(consol_order_report_dir, '*.xlsx')) + glob.glob(os.path.join(consol_order_report_dir, '*.xls'))
+
 
         # Read all ConsolOrderReport files into a list of dataframes
         consol_order_report_dfs = []
