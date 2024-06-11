@@ -1,8 +1,9 @@
 import sys
 import os
+import shutil
 import subprocess
 import pandas as pd
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QSizePolicy, QComboBox, QProgressBar, QProgressDialog, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QSizePolicy, QComboBox, QProgressBar, QProgressDialog, QFileDialog, QMessageBox, QStackedLayout
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QMetaObject, Q_ARG
 import time
@@ -254,19 +255,26 @@ class MainWindow(QMainWindow):
         glico = os.path.join(parent_dir, 'functions', 'Glico')
 
         # Load and display the background image
-        background_label = QLabel(self)
-        # pixmap = QPixmap(os.path.join(frame0, "image_1.png"))
-        pixmap = QPixmap(resource_path(os.path.join(frame0, "image_1.png")))
-        background_label.setPixmap(pixmap)
-        background_label.setScaledContents(True)
-        background_label.setGeometry(0, 0, 750, 550)
+        # background_label = QLabel(self)
+        # # pixmap = QPixmap(os.path.join(frame0, "image_1.png"))
+        # pixmap = QPixmap(resource_path(os.path.join(frame0, "image_1.png")))
+        # background_label.setPixmap(pixmap)
+        # background_label.setScaledContents(True)
+        # background_label.setGeometry(0, 0, 750, 550)
 
         # Create a header
-        header = QLabel("ECOMMS AUTOMATION SYSTEM", self)
-        header.setAlignment(Qt.AlignCenter)
-        header.setStyleSheet("background-color: #6EC8C3; color: #1D4916; font-size: 24px; padding: 10px;")
-        header.setFixedHeight(71)
-        header.setGeometry(0, 0, 750, 71)
+        # header = QLabel("ECOMMS AUTOMATION SYSTEM", self)
+        # header.setAlignment(Qt.AlignCenter)
+        # header.setStyleSheet("background-color: #6EC8C3; color: #1D4916; font-size: 24px; padding: 10px;")
+        # header.setFixedHeight(71)
+        # header.setGeometry(0, 0, 750, 71)
+
+        # Create a header
+        self.header = QLabel("ECOMMS AUTOMATION SYSTEM", self)
+        self.header.setAlignment(Qt.AlignCenter)
+        self.header.setStyleSheet("background-color: #6EC8C3; color: #1D4916; font-size: 24px; padding: 10px;")
+        self.header.setFixedHeight(71)
+        self.header.setGeometry(0, 0, 750, 71)
 
         # Create a sidebar with sections and buttons
         sidebar_layout = QVBoxLayout()
@@ -297,7 +305,17 @@ class MainWindow(QMainWindow):
                     border-left: 5px solid #6EC8C3;
                 }
             """)
-            btn.clicked.connect(lambda checked, b=btn: self.highlight_button(b))
+            if button_text == "Home":
+                btn.clicked.connect(self.show_home_content)
+                btn.clicked.connect(lambda checked, b=btn: self.highlight_button(b))
+            elif button_text == "SKU":
+                btn.clicked.connect(self.show_sku_upload)
+                btn.clicked.connect(lambda checked, b=btn: self.highlight_button(b))
+            elif button_text == "Orders Report":
+                btn.clicked.connect(self.show_orders_report_upload)
+                btn.clicked.connect(lambda checked, b=btn: self.highlight_button(b))
+            else:
+                btn.clicked.connect(lambda checked, b=btn: self.highlight_button(b))
             sidebar_layout.addWidget(btn)
             self.sidebar_buttons.append(btn)
 
@@ -308,12 +326,44 @@ class MainWindow(QMainWindow):
         # sidebar_widget.setGeometry(0, 71, 195, 409)  # Positioned below the header and above the footer
 
         # Create the main content area
-        main_content_layout = QVBoxLayout()
-        main_content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
+        # main_content_layout = QVBoxLayout()
+        # main_content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
 
-        main_content_widget = QWidget()
-        main_content_widget.setLayout(main_content_layout)
-        main_content_widget.setStyleSheet("background-color: transparent;")
+        # main_content_widget = QWidget()
+        # main_content_widget.setLayout(main_content_layout)
+        # main_content_widget.setStyleSheet("background-color: transparent;")
+
+        # Create the home content area
+        self.home_content_layout = QVBoxLayout()
+        self.home_content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
+
+        self.home_content_widget = QWidget()
+        self.home_content_widget.setLayout(self.home_content_layout)
+        self.home_content_widget.setStyleSheet("background-color: transparent;")
+
+        self.background_label = QLabel(self)
+        pixmap = QPixmap(resource_path(os.path.join(frame0, "image_1.png")))
+        self.background_label.setPixmap(pixmap)
+        self.background_label.setScaledContents(True)
+        self.background_label.setGeometry(0, 0, 750, 550)
+
+        self.home_content_layout.addWidget(self.background_label)
+
+        # Create the SKU content area
+        self.sku_content_layout = QVBoxLayout()
+        self.sku_content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
+
+        self.sku_content_widget = QWidget()
+        self.sku_content_widget.setLayout(self.sku_content_layout)
+        self.sku_content_widget.setStyleSheet("background-color: transparent;")
+
+        # Create the Orders Report content area
+        self.orders_report_content_layout = QVBoxLayout()
+        self.orders_report_content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
+
+        self.orders_report_content_widget = QWidget()
+        self.orders_report_content_widget.setLayout(self.orders_report_content_layout)
+        self.orders_report_content_widget.setStyleSheet("background-color: transparent;")
 
         # Create a footer with dropdowns and buttons
         footer_layout = QHBoxLayout()
@@ -393,8 +443,8 @@ class MainWindow(QMainWindow):
 
         #Comment here
         # footer_layout.addWidget(combo_box1)
-        footer_layout.addWidget(self.combo_box1)
         # footer_layout.addWidget(combo_box2)
+        footer_layout.addWidget(self.combo_box1)
         footer_layout.addStretch()
         footer_layout.addWidget(extract_button)
         footer_layout.addWidget(run_button)
@@ -404,6 +454,15 @@ class MainWindow(QMainWindow):
         footer_widget.setStyleSheet("background-color: #6EC8C3;")
         footer_widget.setFixedHeight(40)
         footer_widget.setGeometry(0, 510, 750, 40)
+
+        # Combine sidebar and main content
+        self.main_content_layout = QStackedLayout()
+        self.main_content_layout.addWidget(self.home_content_widget)
+        self.main_content_layout.addWidget(self.sku_content_widget)
+        self.main_content_layout.addWidget(self.orders_report_content_widget)
+
+        main_content_widget = QWidget()
+        main_content_widget.setLayout(self.main_content_layout)
 
         # Combine sidebar and main content
         content_layout = QHBoxLayout()
@@ -419,7 +478,8 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
         main_layout.setSpacing(0)  # Set spacing to zero
-        main_layout.addWidget(header)
+        # main_layout.addWidget(header)
+        main_layout.addWidget(self.header)
         main_layout.addWidget(content_widget)
         main_layout.addWidget(footer_widget)
 
@@ -431,8 +491,178 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
         # Adjust background image stacking order
-        background_label.lower()
-        central_widget.raise_()
+        # background_label.lower()
+        # central_widget.raise_()
+
+    # def show_home_content(self):
+    #     self.header.setText("ECOMMS AUTOMATION SYSTEM")
+    #     self.main_content_layout.setCurrentWidget(self.home_content_widget)
+
+    def show_home_content(self):
+        self.main_content_layout.setCurrentWidget(self.home_content_widget)
+
+    def show_sku_upload(self):
+        # self.header.setText("SKU UPLOAD")
+        self.clear_sku_content()
+        sku_layout = QVBoxLayout()
+
+        sku_title = QLabel("SKU UPLOAD")
+        sku_title.setAlignment(Qt.AlignCenter)
+        sku_title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px;")
+        sku_layout.addWidget(sku_title)
+
+        choose_file_button = QPushButton("Choose File")
+        choose_file_button.setFixedWidth(100)
+        choose_file_button.clicked.connect(self.choose_sku_file)
+
+        self.upload_button = QPushButton("Upload")
+        self.upload_button.setFixedWidth(100)
+        self.upload_button.setEnabled(False)
+        self.upload_button.clicked.connect(self.upload_sku_file)
+
+        # sku_layout.addWidget(choose_file_button)
+        # sku_layout.addWidget(self.upload_button)
+
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(choose_file_button)
+        button_layout.addWidget(self.upload_button)
+
+        sku_layout.addLayout(button_layout)
+
+#tempstart
+        sku_widget = QWidget()
+        sku_widget.setLayout(sku_layout)
+        sku_widget.setStyleSheet("""
+            QWidget {
+                background-color: white;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                padding: 10px;
+            }
+        """)
+        self.sku_content_layout.addWidget(sku_widget)
+        self.main_content_layout.setCurrentWidget(self.sku_content_widget)
+
+    def show_orders_report_upload(self):
+        self.clear_orders_report_content()
+        orders_report_layout = QVBoxLayout()
+
+        orders_report_title = QLabel("ORDERS REPORT UPLOAD")
+        orders_report_title.setAlignment(Qt.AlignCenter)
+        orders_report_title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px;")
+        orders_report_layout.addWidget(orders_report_title)
+
+        choose_file_button = QPushButton("Choose File")
+        choose_file_button.setFixedWidth(100)
+        choose_file_button.clicked.connect(self.choose_orders_report_file)
+
+        self.upload_orders_button = QPushButton("Upload")
+        self.upload_orders_button.setFixedWidth(100)
+        self.upload_orders_button.setEnabled(False)
+        self.upload_orders_button.clicked.connect(self.upload_orders_report_file)
+
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(choose_file_button)
+        button_layout.addWidget(self.upload_orders_button)
+
+        orders_report_layout.addLayout(button_layout)
+
+        orders_report_widget = QWidget()
+        orders_report_widget.setLayout(orders_report_layout)
+        orders_report_widget.setStyleSheet("""
+            QWidget {
+                background-color: white;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                padding: 10px;
+            }
+        """)
+        self.orders_report_content_layout.addWidget(orders_report_widget)
+        self.main_content_layout.setCurrentWidget(self.orders_report_content_widget)
+
+    def choose_sku_file(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(self, "Choose SKU File", "", "Excel Files (*.xlsx)", options=options)
+        if file_name:
+            self.sku_file_path = file_name
+            self.upload_button.setEnabled(True)
+
+    def upload_sku_file(self):
+        if hasattr(self, 'sku_file_path'):
+            for store_name in store:
+                for platform_name in platform:
+                    sku_dir = os.path.join(store_name, platform_name, 'Inbound', 'SKU')
+                    if os.path.exists(sku_dir):
+                        for file_name in os.listdir(sku_dir):
+                            file_path = os.path.join(sku_dir, file_name)
+                            if file_path.endswith('.xlsx'):
+                                os.remove(file_path)
+                    else:
+                        os.makedirs(sku_dir, exist_ok=True)
+                    new_file_path = os.path.join(sku_dir, os.path.basename(self.sku_file_path))
+                    shutil.copy(self.sku_file_path, new_file_path)  # Use shutil.copy instead of os.rename
+            QMessageBox.information(self, "Success", "SKU file uploaded successfully")
+
+    # def choose_orders_report_file(self):
+    #     options = QFileDialog.Options()
+    #     file_name, _ = QFileDialog.getOpenFileName(self, "Choose Orders Report File", "", "Excel Files (*.xlsx)", options=options)
+    #     if file_name:
+    #         self.orders_report_file_path = file_name
+    #         self.upload_orders_button.setEnabled(True)
+
+    def choose_orders_report_file(self):
+        options = QFileDialog.Options()
+        files, _ = QFileDialog.getOpenFileNames(self, "Choose Orders Report Files", "", "Excel Files (*.xlsx *.xls)", options=options)
+        if files and len(files) <= 2:
+            self.orders_report_files = files
+            self.upload_orders_button.setEnabled(True)
+        else:
+            QMessageBox.warning(self, "Warning", "Please select up to 2 Excel files (.xlsx or .xls).")
+
+    # def upload_orders_report_file(self):
+    #     if hasattr(self, 'orders_report_file_path'):
+    #         for store_name in store:
+    #             for platform_name in platform:
+    #                 orders_report_dir = os.path.join(store_name, platform_name, 'Inbound', 'ConsolOrderReport')
+    #                 if os.path.exists(orders_report_dir):
+    #                     for file_name in os.listdir(orders_report_dir):
+    #                         file_path = os.path.join(orders_report_dir, file_name)
+    #                         if file_path.endswith('.xlsx'):
+    #                             os.remove(file_path)
+    #                 else:
+    #                     os.makedirs(orders_report_dir, exist_ok=True)
+    #                 new_file_path = os.path.join(orders_report_dir, os.path.basename(self.orders_report_file_path))
+    #                 shutil.copy(self.orders_report_file_path, new_file_path)  # Use shutil.copy instead of os.rename
+    #         QMessageBox.information(self, "Success", "Orders Report file uploaded successfully")
+
+    def upload_orders_report_file(self):
+        if hasattr(self, 'orders_report_files'):
+            for store_name in store:
+                for platform_name in platform:
+                    orders_report_dir = os.path.join(store_name, platform_name, 'Inbound', 'ConsolOrderReport')
+                    if os.path.exists(orders_report_dir):
+                        for file_name in os.listdir(orders_report_dir):
+                            file_path = os.path.join(orders_report_dir, file_name)
+                            if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
+                                os.remove(file_path)
+                    else:
+                        os.makedirs(orders_report_dir, exist_ok=True)
+                    for report_file in self.orders_report_files:
+                        new_file_path = os.path.join(orders_report_dir, os.path.basename(report_file))
+                        shutil.copy(report_file, new_file_path)  # Use shutil.copy instead of os.rename
+            QMessageBox.information(self, "Success", "Orders Report files uploaded successfully")
+
+    def clear_sku_content(self):
+        for i in reversed(range(self.sku_content_layout.count())):
+            widget_to_remove = self.sku_content_layout.itemAt(i).widget()
+            self.sku_content_layout.removeWidget(widget_to_remove)
+            widget_to_remove.setParent(None)
+
+    def clear_orders_report_content(self):
+        for i in reversed(range(self.orders_report_content_layout.count())):
+            widget_to_remove = self.orders_report_content_layout.itemAt(i).widget()
+            self.orders_report_content_layout.removeWidget(widget_to_remove)
+            widget_to_remove.setParent(None)
 
     def highlight_button(self, button):
         for btn in self.sidebar_buttons:
@@ -457,6 +687,8 @@ class MainWindow(QMainWindow):
                 font-size: 14px;
             }
         """)
+
+    # Include other methods like run_scripts, handle_extract, extract_quickbooks_files, extract_consolidation_files, etc. from the previous code...
 
 def main():
     app = QApplication(sys.argv)
