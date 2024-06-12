@@ -1,0 +1,17 @@
+
+
+
+1. Temporary: Put raw data manuall inside of Store\Platform\RawData
+2. Click SKU Button, upload only 1 SKU .xlsx file
+3. Click Orders Report, upload 2 Orders report Fixed .xlsx .xls or .xlsx .xlsx or .xls .xls are now available
+4. Click Run, wait and do not click cancel
+5. Choose extraction cons or qb upload file, click Extract Button and locate your desired place and wait, and do not cancel
+
+
+Notes: These are sensitive consolidation, so do not attempt to open the file that are using inside of "Ecomms folder"
+
+You can create your own folder. Extraction Folder is just an example Test to extract files.
+
+6. Temporary: Delete excel files from store\platform\Outbound\cons or quickbooks as it does not go to archive yet. Only temporary approach so you will not stack up excels that already extracted
+
+You can now Test

@@ -308,6 +308,9 @@ class MainWindow(QMainWindow):
             if button_text == "Home":
                 btn.clicked.connect(self.show_home_content)
                 btn.clicked.connect(lambda checked, b=btn: self.highlight_button(b))
+            elif button_text == "Raw Data":
+                btn.clicked.connect(self.show_raw_data_upload)
+                btn.clicked.connect(lambda checked, b=btn: self.highlight_button(b))
             elif button_text == "SKU":
                 btn.clicked.connect(self.show_sku_upload)
                 btn.clicked.connect(lambda checked, b=btn: self.highlight_button(b))
@@ -364,6 +367,14 @@ class MainWindow(QMainWindow):
         self.orders_report_content_widget = QWidget()
         self.orders_report_content_widget.setLayout(self.orders_report_content_layout)
         self.orders_report_content_widget.setStyleSheet("background-color: transparent;")
+
+        # Create the Raw Data content area
+        self.raw_data_content_layout = QVBoxLayout()
+        self.raw_data_content_layout.setContentsMargins(0, 0, 0, 0)  # Set layout margins to zero
+
+        self.raw_data_content_widget = QWidget()
+        self.raw_data_content_widget.setLayout(self.raw_data_content_layout)
+        self.raw_data_content_widget.setStyleSheet("background-color: transparent;")
 
         # Create a footer with dropdowns and buttons
         footer_layout = QHBoxLayout()
@@ -460,6 +471,7 @@ class MainWindow(QMainWindow):
         self.main_content_layout.addWidget(self.home_content_widget)
         self.main_content_layout.addWidget(self.sku_content_widget)
         self.main_content_layout.addWidget(self.orders_report_content_widget)
+        self.main_content_layout.addWidget(self.raw_data_content_widget)
 
         main_content_widget = QWidget()
         main_content_widget.setLayout(self.main_content_layout)
@@ -511,21 +523,21 @@ class MainWindow(QMainWindow):
         sku_title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px;")
         sku_layout.addWidget(sku_title)
 
-        choose_file_button = QPushButton("Choose File")
-        choose_file_button.setFixedWidth(100)
-        choose_file_button.clicked.connect(self.choose_sku_file)
+        choose_sku_file_button = QPushButton("Choose File")
+        choose_sku_file_button.setFixedWidth(100)
+        choose_sku_file_button.clicked.connect(self.choose_sku_file)
 
-        self.upload_button = QPushButton("Upload")
-        self.upload_button.setFixedWidth(100)
-        self.upload_button.setEnabled(False)
-        self.upload_button.clicked.connect(self.upload_sku_file)
+        self.upload_sku_button = QPushButton("Upload")
+        self.upload_sku_button.setFixedWidth(100)
+        self.upload_sku_button.setEnabled(False)
+        self.upload_sku_button.clicked.connect(self.upload_sku_file)
 
-        # sku_layout.addWidget(choose_file_button)
-        # sku_layout.addWidget(self.upload_button)
+        # sku_layout.addWidget(choose_sku_file_button)
+        # sku_layout.addWidget(self.upload_sku_button)
 
         button_layout = QHBoxLayout()
-        button_layout.addWidget(choose_file_button)
-        button_layout.addWidget(self.upload_button)
+        button_layout.addWidget(choose_sku_file_button)
+        button_layout.addWidget(self.upload_sku_button)
 
         sku_layout.addLayout(button_layout)
 
@@ -552,9 +564,9 @@ class MainWindow(QMainWindow):
         orders_report_title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px;")
         orders_report_layout.addWidget(orders_report_title)
 
-        choose_file_button = QPushButton("Choose File")
-        choose_file_button.setFixedWidth(100)
-        choose_file_button.clicked.connect(self.choose_orders_report_file)
+        choose_orders_report_file_button = QPushButton("Choose File")
+        choose_orders_report_file_button.setFixedWidth(100)
+        choose_orders_report_file_button.clicked.connect(self.choose_orders_report_file)
 
         self.upload_orders_button = QPushButton("Upload")
         self.upload_orders_button.setFixedWidth(100)
@@ -562,7 +574,7 @@ class MainWindow(QMainWindow):
         self.upload_orders_button.clicked.connect(self.upload_orders_report_file)
 
         button_layout = QHBoxLayout()
-        button_layout.addWidget(choose_file_button)
+        button_layout.addWidget(choose_orders_report_file_button)
         button_layout.addWidget(self.upload_orders_button)
 
         orders_report_layout.addLayout(button_layout)
@@ -580,28 +592,66 @@ class MainWindow(QMainWindow):
         self.orders_report_content_layout.addWidget(orders_report_widget)
         self.main_content_layout.setCurrentWidget(self.orders_report_content_widget)
 
+    def show_raw_data_upload(self):
+        self.clear_raw_data_content()
+        raw_data_layout = QVBoxLayout()
+
+        raw_data_title = QLabel("RAW DATA UPLOAD")
+        raw_data_title.setAlignment(Qt.AlignCenter)
+        raw_data_title.setStyleSheet("font-size: 18px; font-weight: bold; padding: 10px;")
+        raw_data_layout.addWidget(raw_data_title)
+
+        self.store_combo_box = QComboBox()
+        self.store_combo_box.addItem("Please select store")
+        self.store_combo_box.addItems(store)
+        self.store_combo_box.setFixedWidth(150)
+        self.store_combo_box.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #6EC8C3;
+                border-radius: 5px;
+                padding: 5px;
+                background-color: #FFFFFF;
+            }
+        """)
+        raw_data_layout.addWidget(self.store_combo_box)
+
+        self.choose_raw_data_file_button = QPushButton("Choose File")
+        self.choose_raw_data_file_button.setFixedWidth(100)
+        self.choose_raw_data_file_button.setEnabled(False)
+        self.choose_raw_data_file_button.clicked.connect(self.choose_raw_data_file)
+
+        self.upload_raw_data_button = QPushButton("Upload")
+        self.upload_raw_data_button.setFixedWidth(100)
+        self.upload_raw_data_button.setEnabled(False)
+        self.upload_raw_data_button.clicked.connect(self.upload_raw_data_file)
+
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.choose_raw_data_file_button)
+        button_layout.addWidget(self.upload_raw_data_button)
+
+        raw_data_layout.addLayout(button_layout)
+
+        raw_data_widget = QWidget()
+        raw_data_widget.setLayout(raw_data_layout)
+        raw_data_widget.setStyleSheet("""
+            QWidget {
+                background-color: white;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                padding: 10px;
+            }
+        """)
+        self.raw_data_content_layout.addWidget(raw_data_widget)
+        self.main_content_layout.setCurrentWidget(self.raw_data_content_widget)
+
+        self.store_combo_box.currentIndexChanged.connect(self.enable_choose_raw_data_file_button)
+
     def choose_sku_file(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self, "Choose SKU File", "", "Excel Files (*.xlsx)", options=options)
         if file_name:
             self.sku_file_path = file_name
-            self.upload_button.setEnabled(True)
-
-    def upload_sku_file(self):
-        if hasattr(self, 'sku_file_path'):
-            for store_name in store:
-                for platform_name in platform:
-                    sku_dir = os.path.join(store_name, platform_name, 'Inbound', 'SKU')
-                    if os.path.exists(sku_dir):
-                        for file_name in os.listdir(sku_dir):
-                            file_path = os.path.join(sku_dir, file_name)
-                            if file_path.endswith('.xlsx'):
-                                os.remove(file_path)
-                    else:
-                        os.makedirs(sku_dir, exist_ok=True)
-                    new_file_path = os.path.join(sku_dir, os.path.basename(self.sku_file_path))
-                    shutil.copy(self.sku_file_path, new_file_path)  # Use shutil.copy instead of os.rename
-            QMessageBox.information(self, "Success", "SKU file uploaded successfully")
+            self.upload_sku_button.setEnabled(True)
 
     # def choose_orders_report_file(self):
     #     options = QFileDialog.Options()
@@ -619,7 +669,36 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.warning(self, "Warning", "Please select up to 2 Excel files (.xlsx or .xls).")
 
-    # def upload_orders_report_file(self):
+    def choose_raw_data_file(self):
+        if self.store_combo_box.currentIndex() == -1:
+            QMessageBox.warning(self, "Warning", "Please select a store before choosing files.")
+            return
+
+        options = QFileDialog.Options()
+        files, _ = QFileDialog.getOpenFileNames(self, "Choose Raw Data Files", "", "Excel Files (*.xlsx)", options=options)
+        if files:
+            self.raw_data_files = files
+            self.upload_raw_data_button.setEnabled(True)
+        else:
+            self.upload_raw_data_button.setEnabled(False)
+
+    def upload_sku_file(self):
+        if hasattr(self, 'sku_file_path'):
+            for store_name in store:
+                for platform_name in platform:
+                    sku_dir = os.path.join(store_name, platform_name, 'Inbound', 'SKU')
+                    if os.path.exists(sku_dir):
+                        for file_name in os.listdir(sku_dir):
+                            file_path = os.path.join(sku_dir, file_name)
+                            if file_path.endswith('.xlsx'):
+                                os.remove(file_path)
+                    else:
+                        os.makedirs(sku_dir, exist_ok=True)
+                    new_file_path = os.path.join(sku_dir, os.path.basename(self.sku_file_path))
+                    shutil.copy(self.sku_file_path, new_file_path)  # Use shutil.copy instead of os.rename
+            QMessageBox.information(self, "Success", "SKU file uploaded successfully")
+
+   # def upload_orders_report_file(self):
     #     if hasattr(self, 'orders_report_file_path'):
     #         for store_name in store:
     #             for platform_name in platform:
@@ -652,6 +731,35 @@ class MainWindow(QMainWindow):
                         shutil.copy(report_file, new_file_path)  # Use shutil.copy instead of os.rename
             QMessageBox.information(self, "Success", "Orders Report files uploaded successfully")
 
+    def upload_raw_data_file(self):
+        if hasattr(self, 'raw_data_files'):
+            selected_store = self.store_combo_box.currentText()
+            platforms_cleared = set()  # To keep track of cleared directories
+            for raw_data_file in self.raw_data_files:
+                file_name = os.path.basename(raw_data_file)
+                if file_name.startswith("All order"):
+                    platform_dir = os.path.join(selected_store, 'Tiktok', 'Inbound', 'RawData')
+                elif file_name.startswith("Order.all"):
+                    platform_dir = os.path.join(selected_store, 'Shopee', 'Inbound', 'RawData')
+                else:
+                    platform_dir = os.path.join(selected_store, 'Lazada', 'Inbound', 'RawData')
+
+                if platform_dir not in platforms_cleared:
+                    # Clear the directory first
+                    if os.path.exists(platform_dir):
+                        for existing_file_name in os.listdir(platform_dir):
+                            existing_file_path = os.path.join(platform_dir, existing_file_name)
+                            if existing_file_path.endswith('.xlsx'):
+                                os.remove(existing_file_path)
+                    else:
+                        os.makedirs(platform_dir, exist_ok=True)
+                    platforms_cleared.add(platform_dir)
+
+                # Copy the new file
+                new_file_path = os.path.join(platform_dir, os.path.basename(raw_data_file))
+                shutil.copy(raw_data_file, new_file_path)
+            QMessageBox.information(self, "Success", "Raw Data files uploaded successfully")
+
     def clear_sku_content(self):
         for i in reversed(range(self.sku_content_layout.count())):
             widget_to_remove = self.sku_content_layout.itemAt(i).widget()
@@ -663,6 +771,19 @@ class MainWindow(QMainWindow):
             widget_to_remove = self.orders_report_content_layout.itemAt(i).widget()
             self.orders_report_content_layout.removeWidget(widget_to_remove)
             widget_to_remove.setParent(None)
+            
+    def clear_raw_data_content(self):
+        for i in reversed(range(self.raw_data_content_layout.count())):
+            widget_to_remove = self.raw_data_content_layout.itemAt(i).widget()
+            self.raw_data_content_layout.removeWidget(widget_to_remove)
+            widget_to_remove.setParent(None)
+
+    def enable_choose_raw_data_file_button(self):
+        if self.store_combo_box.currentIndex() != 0:
+            self.choose_raw_data_file_button.setEnabled(True)
+        else:
+            self.choose_raw_data_file_button.setEnabled(False)
+            self.upload_raw_data_button.setEnabled(False)
 
     def highlight_button(self, button):
         for btn in self.sidebar_buttons:
