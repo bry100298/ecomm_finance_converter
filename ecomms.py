@@ -132,6 +132,18 @@ class MainWindow(QMainWindow):
 
         self.progress_dialog.close()
 
+        # Move the contents of the QuickBooks directories to the archive
+        for store_name in store:
+            for platform_name in platform:
+                quickbooks_dir = os.path.join(store_name, platform_name, 'Outbound', 'QuickBooks')
+                archive_dir = os.path.join(store_name, platform_name, 'Archive', 'QuickBooks')
+                if os.path.exists(quickbooks_dir):
+                    if not os.path.exists(archive_dir):
+                        os.makedirs(archive_dir)
+                    for file_name in os.listdir(quickbooks_dir):
+                        shutil.move(os.path.join(quickbooks_dir, file_name), os.path.join(archive_dir, file_name))
+                    # os.rmdir(quickbooks_dir)
+
     def update_quickbooks_progress(self, total_tasks, num_rows):
         progress_per_task = 100 / total_tasks
         self.completed_tasks += (num_rows + ROW_LIMIT - 1) // ROW_LIMIT
@@ -223,6 +235,18 @@ class MainWindow(QMainWindow):
             writer.close()
 
         self.progress_dialog.close()
+
+        # Move the contents of the consolidation directories to the archive
+        for store_name in store:
+            for platform_name in platform:
+                consolidation_dir = os.path.join(store_name, platform_name, 'Outbound', 'Consolidation')
+                archive_dir = os.path.join(store_name, platform_name, 'Archive', 'Consolidation')
+                if os.path.exists(consolidation_dir):
+                    if not os.path.exists(archive_dir):
+                        os.makedirs(archive_dir)
+                    for file_name in os.listdir(consolidation_dir):
+                        shutil.move(os.path.join(consolidation_dir, file_name), os.path.join(archive_dir, file_name))
+                    # os.rmdir(consolidation_dir)
 
     def update_consolidation_progress(self, total_files):
         progress_per_task = 100 / total_files
