@@ -236,7 +236,7 @@ def merge_data(raw_data_dir, sku_dir, consol_order_report_dir, merged_dir):
 
         # Filter consol_order_report for the desired Order Source
         consol_order_report_filtered = consol_order_report[
-            consol_order_report['Order Source'] == 'Lazada Philippines (Lazada Frito-Lay)'
+            consol_order_report['Order Source'] == 'Lazada Philippines (Lazada Glico)'
         ]
 
         # Convert 'orderNumber' and 'Order Number.' to string type
@@ -389,7 +389,7 @@ generate_consolidation(merged_dir, consolidation_dir)
 def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
     # Find any xlsx files in the input directory
     input_files = glob.glob(os.path.join(consolidation_dir, '*.xlsx'))
-    store_name = 'LAZADA PHILIPPINES (LAZADA FRITO-LAY)'
+    store_name = 'LAZADA PHILIPPINES (LAZADA GLICO)'
 
     for input_file in input_files:
         # Read the Excel file
@@ -434,24 +434,55 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
         # Convert '*InvoiceDate' to datetime if it's not already
         if not pd.api.types.is_datetime64_any_dtype(merge_data['*InvoiceDate']):
             merge_data['*InvoiceDate'] = pd.to_datetime(merge_data['*InvoiceDate'], errors='coerce')
-        
-        # Format the '*InvoiceDate' column to MM/DD/YYYY format
-        merge_data['*InvoiceDate'] = merge_data['*InvoiceDate'].dt.strftime('%m/%d/%Y')
-        
-        # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
-        # merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'] + merge_data['*InvoiceDate'].str.replace('/', '')
 
-        # Ensure '*InvoiceNo' is of type str
-        merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'].astype(str)
-
-        # Generate filename
-        filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
+        #ORIGINAL
+        # # Format the '*InvoiceDate' column to MM/DD/YYYY format
+        # merge_data['*InvoiceDate'] = merge_data['*InvoiceDate'].dt.strftime('%m/%d/%Y')
         
-        # Save the modified data to the output directory
-        output_path = os.path.join(quickbooks_dir, filename)
-        merge_data.to_excel(output_path, index=False)
-        print(f"Consolidation generated and saved to: {output_path}")
+        # # Format the '*InvoiceNo' column to include the date in MMDDYYYY format
+        # # merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'] + merge_data['*InvoiceDate'].str.replace('/', '')
 
+        # # Ensure '*InvoiceNo' is of type str
+        # merge_data['*InvoiceNo'] = merge_data['*InvoiceNo'].astype(str)
+
+        # # Generate filename
+        # filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
+        
+        # # Save the modified data to the output directory
+        # output_path = os.path.join(quickbooks_dir, filename)
+        # merge_data.to_excel(output_path, index=False)
+        # print(f"Consolidation generated and saved to: {output_path}")
+
+        # Separate rows with and without valid '*InvoiceDate'
+        valid_invoice_date = merge_data[merge_data['*InvoiceDate'].notnull()]
+        pending_invoice_date = merge_data[merge_data['*InvoiceDate'].isnull()]
+
+        # Process valid invoice date entries
+        if not valid_invoice_date.empty:
+            # Format the '*InvoiceDate' column to MM/DD/YYYY format
+            valid_invoice_date['*InvoiceDate'] = valid_invoice_date['*InvoiceDate'].dt.strftime('%m/%d/%Y')
+
+            # Generate filename
+            valid_filename = os.path.basename(input_file).replace(".xlsx", "_quickbooks_upload.xlsx")
+
+            # Save the modified data to the output directory
+            valid_output_path = os.path.join(quickbooks_dir, valid_filename)
+            valid_invoice_date.to_excel(valid_output_path, index=False)
+            print(f"Consolidation generated and saved to: {valid_output_path}")
+
+        # Process pending invoice date entries
+        if not pending_invoice_date.empty:
+            pending_filename = os.path.basename(input_file).replace(".xlsx", "_pending_quickbooks_upload.xlsx")
+
+            # Create the pending directory if it doesn't exist
+            pending_dir = os.path.join(quickbooks_dir, 'pending')
+            os.makedirs(pending_dir, exist_ok=True)
+
+            # Save the pending data to the pending directory
+            pending_output_path = os.path.join(pending_dir, pending_filename)
+            pending_invoice_date.to_excel(pending_output_path, index=False)
+            print(f"Pending consolidation generated and saved to: {pending_output_path}")
+            
 # Define directories
 consolidation_dir = os.path.join(parent_dir, 'Lazada', 'Outbound', 'Consolidation')
 quickbooks_dir = os.path.join(parent_dir, 'Lazada', 'Outbound', 'QuickBooks')
