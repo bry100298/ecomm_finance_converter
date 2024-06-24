@@ -141,7 +141,8 @@ class MainWindow(QMainWindow):
                     if not os.path.exists(archive_dir):
                         os.makedirs(archive_dir)
                     for file_name in os.listdir(quickbooks_dir):
-                        shutil.move(os.path.join(quickbooks_dir, file_name), os.path.join(archive_dir, file_name))
+                        if file_name.endswith('.xlsx'):
+                            shutil.move(os.path.join(quickbooks_dir, file_name), os.path.join(archive_dir, file_name))
                     # os.rmdir(quickbooks_dir)
 
     def update_quickbooks_progress(self, total_tasks, num_rows):
