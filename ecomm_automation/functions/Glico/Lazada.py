@@ -428,7 +428,7 @@ def generate_quickbook_upload(consolidation_dir, quickbooks_dir):
             'Material Description': 'Item(Product/Service)',
             'Qty': 'ItemQuantity',
             'GROSS SALES': '*ItemAmount',
-        })[['*InvoiceNo', '*Customer', '*InvoiceDate', 'DISPATCHED DATE + 30 DAYS', 'Terms', 'Location', 'Memo', 'Item(Product/Service)', 'ItemDescription', 'ItemQuantity', 'ItemRate', '*ItemTaxCode', 'ItemTaxAmount', 'Currency', 'Service Date']]
+        })[['*InvoiceNo', '*Customer', '*InvoiceDate', 'DISPATCHED DATE + 30 DAYS', 'Terms', 'Location', 'Memo', 'Item(Product/Service)', 'ItemDescription', 'ItemQuantity', '*ItemAmount', 'ItemRate', '*ItemTaxCode', 'ItemTaxAmount', 'Currency', 'Service Date']]
         
 
         # Convert '*InvoiceDate' to datetime if it's not already
