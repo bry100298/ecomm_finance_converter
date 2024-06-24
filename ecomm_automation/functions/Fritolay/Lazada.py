@@ -190,14 +190,21 @@ def extract_quantity(seller_sku):
         return 1
     for remove_str in skus_to_remove:
         seller_sku = seller_sku.replace(remove_str, "")
-    if 'x' in seller_sku:
-        try:
-            quantity_part = seller_sku.split('x')[1]
-            # Keep only the numeric part of quantity_part
-            quantity_part = ''.join(char for char in quantity_part if char.isdigit())
-            return int(quantity_part)
-        except ValueError:
-            return 1
+    for sku_key in specific_sku_clean_KTR:
+        if seller_sku.startswith(sku_key):
+            # Extract quantity for specific_sku_clean_KTR
+            try:
+                return int(seller_sku.split(specific_sku_clean_KTR[sku_key])[0].split('x')[1])
+            except (IndexError, ValueError):
+                return 1
+    # if 'x' in seller_sku:
+    #     try:
+    #         quantity_part = seller_sku.split('x')[1]
+    #         # Keep only the numeric part of quantity_part
+    #         quantity_part = ''.join(char for char in quantity_part if char.isdigit())
+    #         return int(quantity_part)
+    #     except ValueError:
+    #         return 1
     return 1
     # if 'x' in seller_sku:
     #     try:
