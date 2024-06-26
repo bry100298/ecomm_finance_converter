@@ -324,6 +324,9 @@ def generate_consolidation(input_dir, output_dir):
             else:
                 merge_data.at[index, 'Other Income'] = 0
 
+        # Convert 'Out of Warehouse' to the desired format mm/dd/yyyy HH:MM:SS
+        merge_data['Out of Warehouse'] = pd.to_datetime(merge_data['Out of Warehouse'], format='%d-%m-%Y %H:%M:%S').dt.strftime('%m/%d/%Y %H:%M:%S')
+
         # merge_data['Voucher discounts'] = None
         # Calculate Voucher discounts
         merge_data['Voucher discounts'] = merge_data.groupby('Order ID')['Seller Voucher(PHP)'].transform(lambda x: x / x.count())
